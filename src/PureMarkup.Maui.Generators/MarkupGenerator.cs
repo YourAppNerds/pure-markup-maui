@@ -8,6 +8,14 @@ namespace PureMarkup.Maui.Generators;
 /// Emits fluent extension methods for MAUI types named by <c>[assembly: GenerateMarkup(...)]</c>.
 /// Pipeline: compilation symbols -> equatable <see cref="MarkupModel"/> -> one source file per type.
 /// </summary>
+/// <summary>Step names for incremental-caching tests.</summary>
+public static class TrackingNames
+{
+    public const string WholeAssemblyKey = nameof(WholeAssemblyKey);
+    public const string WholeAssemblyWalk = nameof(WholeAssemblyWalk);
+    public const string Local = nameof(Local);
+}
+
 [Generator(LanguageNames.CSharp)]
 public sealed class MarkupGenerator : IIncrementalGenerator
 {
@@ -44,10 +52,24 @@ public sealed class MarkupGenerator : IIncrementalGenerator
         context.RegisterPostInitializationOutput(static ctx =>
             ctx.AddSource("GenerateMarkupAttribute.g.cs", SourceText.From(AttributeSource, System.Text.Encoding.UTF8)));
 
-        // TODO: CompilationProvider re-runs the symbol walk on every edit; the equatable model keeps
-        // emission cached. Narrow the trigger to assembly-attribute changes if consumer-time use grows.
-        var model = context.CompilationProvider.Select(static (compilation, ct) => ModelBuilder.Build(compilation, ct));
+        // Whole-assembly walks over referenced assemblies depend only on an equatable key (assembly
+        // identities + attribute arguments), so edits to user source do not re-walk. Everything else
+        // (single types, the compilation's own assembly) is small and re-runs per compilation.
+        var wholeAssembly = context.CompilationProvider
+            .Select(static (compilation, _) => ModelBuilder.ReadWholeAssemblyInput(compilation))
+            .WithTrackingName(TrackingNames.WholeAssemblyKey)
+            .Select(static (input, ct) => ModelBuilder.BuildWholeAssembly(input, ct))
+            .WithTrackingName(TrackingNames.WholeAssemblyWalk);
+        var local = context.CompilationProvider
+            .Select(static (compilation, ct) => ModelBuilder.BuildLocal(compilation, ct))
+            .WithTrackingName(TrackingNames.Local);
 
+        Register(context, wholeAssembly);
+        Register(context, local);
+    }
+
+    private static void Register(IncrementalGeneratorInitializationContext context, IncrementalValueProvider<MarkupModel> model)
+    {
         var types = model.SelectMany(static (m, _) => m.Types);
         context.RegisterSourceOutput(types, static (spc, type) =>
             spc.AddSource(type.ClassName + ".g.cs", SourceText.From(Emitter.Emit(type), System.Text.Encoding.UTF8)));

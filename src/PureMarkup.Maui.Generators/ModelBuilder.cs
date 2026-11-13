@@ -23,12 +23,96 @@ internal static class ModelBuilder
     private static readonly SymbolDisplayFormat ValueFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
-    public static MarkupModel Build(Compilation compilation, CancellationToken ct)
+    /// <summary>
+    /// Cheap per-edit step: the whole-assembly requests that target referenced (metadata) assemblies,
+    /// reduced to an equatable key. Edits to user source leave the key unchanged, so the expensive
+    /// walk in <see cref="BuildWholeAssembly"/> stays cached.
+    /// </summary>
+    public static WholeAssemblyInput ReadWholeAssemblyInput(Compilation compilation)
     {
-        var attributes = compilation.Assembly.GetAttributes()
-            .Where(a => a.AttributeClass?.ToDisplayString() == AttributeName)
+        var requests = ReadRequests(compilation).Where(r => IsWholeAssemblyFromMetadata(r, compilation)).ToList();
+        if (requests.Count == 0)
+        {
+            return new WholeAssemblyInput(EquatableArray<WholeAssemblyKey>.Empty, compilation);
+        }
+
+        var mauiAssembly = compilation.GetTypeByMetadataName("Microsoft.Maui.Controls.BindableObject")?.ContainingAssembly.Identity.GetDisplayName(fullKey: true) ?? "";
+        var keys = requests
+            .Select(r => new WholeAssemblyKey(
+                r.Type.ToDisplayString(TypeFormat),
+                r.Type.ContainingAssembly.Identity.GetDisplayName(fullKey: true),
+                mauiAssembly,
+                r.Namespace))
+            .ToArray();
+        return new WholeAssemblyInput(new EquatableArray<WholeAssemblyKey>(keys), compilation);
+    }
+
+    /// <summary>The expensive walk over every public type of referenced assemblies (e.g. all of Microsoft.Maui.Controls).</summary>
+    public static MarkupModel BuildWholeAssembly(WholeAssemblyInput input, CancellationToken ct)
+    {
+        if (input.Keys.Length == 0)
+        {
+            return MarkupModel.Empty;
+        }
+
+        var compilation = input.Compilation;
+        return Build(compilation, ReadRequests(compilation).Where(r => IsWholeAssemblyFromMetadata(r, compilation)).ToList(), ct);
+    }
+
+    /// <summary>
+    /// Everything else: single-type requests and whole-assembly requests on the compilation's own
+    /// assembly. These depend on user source, so they run per edit; they are small.
+    /// Types already covered by a metadata whole-assembly request are skipped.
+    /// </summary>
+    public static MarkupModel BuildLocal(Compilation compilation, CancellationToken ct)
+    {
+        var requests = ReadRequests(compilation);
+        var covered = new HashSet<IAssemblySymbol>(
+            requests.Where(r => IsWholeAssemblyFromMetadata(r, compilation)).Select(r => r.Type.ContainingAssembly),
+            SymbolEqualityComparer.Default);
+        var local = requests
+            .Where(r => !IsWholeAssemblyFromMetadata(r, compilation) && !covered.Contains(r.Type.ContainingAssembly))
             .ToList();
-        if (attributes.Count == 0)
+        return Build(compilation, local, ct);
+    }
+
+    private static bool IsWholeAssemblyFromMetadata(Request request, Compilation compilation)
+        => request.WholeAssembly && !SymbolEqualityComparer.Default.Equals(request.Type.ContainingAssembly, compilation.Assembly);
+
+    private static List<Request> ReadRequests(Compilation compilation)
+    {
+        var requests = new List<Request>();
+        foreach (var attribute in compilation.Assembly.GetAttributes())
+        {
+            if (attribute.AttributeClass?.ToDisplayString() != AttributeName
+                || attribute.ConstructorArguments.Length != 1 || attribute.ConstructorArguments[0].Value is not INamedTypeSymbol type)
+            {
+                continue;
+            }
+
+            var wholeAssembly = false;
+            string? ns = null;
+            foreach (var named in attribute.NamedArguments)
+            {
+                if (named.Key == "WholeAssembly" && named.Value.Value is bool b)
+                {
+                    wholeAssembly = b;
+                }
+                else if (named.Key == "Namespace" && named.Value.Value is string s && s.Length > 0)
+                {
+                    ns = s;
+                }
+            }
+
+            requests.Add(new Request(type, wholeAssembly, ns));
+        }
+
+        return requests;
+    }
+
+    private static MarkupModel Build(Compilation compilation, List<Request> requests, CancellationToken ct)
+    {
+        if (requests.Count == 0)
         {
             return MarkupModel.Empty;
         }
@@ -43,33 +127,20 @@ internal static class ModelBuilder
 
         var ns = DefaultNamespace;
         var types = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-        foreach (var attribute in attributes)
+        foreach (var request in requests)
         {
-            if (attribute.ConstructorArguments.Length != 1 || attribute.ConstructorArguments[0].Value is not INamedTypeSymbol type)
+            if (request.Namespace is not null)
             {
-                continue;
+                ns = request.Namespace;
             }
 
-            var wholeAssembly = false;
-            foreach (var named in attribute.NamedArguments)
+            if (request.WholeAssembly)
             {
-                if (named.Key == "WholeAssembly" && named.Value.Value is bool b)
-                {
-                    wholeAssembly = b;
-                }
-                else if (named.Key == "Namespace" && named.Value.Value is string s && s.Length > 0)
-                {
-                    ns = s;
-                }
-            }
-
-            if (wholeAssembly)
-            {
-                CollectTypes(type.ContainingAssembly.GlobalNamespace, types, ct);
+                CollectTypes(request.Type.ContainingAssembly.GlobalNamespace, types, ct);
             }
             else
             {
-                types.Add(type);
+                types.Add(request.Type);
             }
         }
 
@@ -517,6 +588,8 @@ internal static class ModelBuilder
 
     private static DiagnosticModel Diag(DiagnosticDescriptor descriptor, params string[] args)
         => new(descriptor.Id, new EquatableArray<string>(args));
+
+    private sealed record Request(INamedTypeSymbol Type, bool WholeAssembly, string? Namespace);
 
     private sealed record Candidate(MethodModel Method, INamedTypeSymbol DeclaringType, INamedTypeSymbol Receiver, ISymbol Backing, string Label);
 
