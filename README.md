@@ -25,6 +25,28 @@ A small hand-written layer in `src/PureMarkup.Maui/Sugar/` (same namespace) adds
 `.Row(Row.Body)`, `.Column(Col.Label, Col.Input)` (with span). Parts adapted from
 CommunityToolkit.Maui.Markup (MIT, see `THIRD-PARTY-NOTICES.md`).
 
+## Presets and tokens
+A `Preset<T>` is written with the same methods and compiles to one cached MAUI `Style`:
+```csharp
+public static Preset<Entry> Field => Preset.Once<Entry>(static p => p
+    .FontSize(Tokens.Body).Height(44).TextColor(Tokens.Text)
+    .State(VisualStateManager.CommonStates.Disabled, static s => s.Opacity(0.5)));
+public static Preset<Entry> Numeric => Field.With(static p => p.Keyboard(Keyboard.Numeric)); // BasedOn
+
+new Entry().Use(AppPresets.Numeric).FontSize(18);   // local value wins, in any order
+AppPresets.Field.New();                              // new Entry().Use(...)
+this.UsePresets(r => r.Default(AppPresets.Field));   // in App(): implicit look for plain new Entry()
+```
+MAUI specificity applies: local values beat preset values; `.State(...)`, `.Trigger(...)` and
+`.DataTrigger(...)` setters beat local values while active; `.With` beats its base; `.Use` replaces
+an earlier `.Use` and beats the implicit default where both set a property (other implicit setters
+still apply underneath). `.Also(e => ...)` covers events and plain properties; it runs at
+`.Use`/`.New`, not for implicit defaults. `Token<T>` (`new Token<Color>(light, dark)`) works on
+elements and in presets. `AppThemeBinding` is internal on net10, so tokens are dynamic resources:
+`UsePresets` (or `Theme.Attach(app)`) writes them into `app.Resources` and rewrites them on
+`RequestedThemeChanged`, so theme switches update live. A `MetadataUpdateHandler` clears the preset
+cache on Hot Reload; existing elements keep their Style.
+
 ## Layout
 - `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
   a whole referenced assembly is keyed on assembly identity + attribute arguments, so source
@@ -35,7 +57,8 @@ CommunityToolkit.Maui.Markup (MIT, see `THIRD-PARTY-NOTICES.md`).
 - `tests/PureMarkup.Maui.Generators.Tests/`: xUnit + Verify: generator snapshots, real-MAUI run,
   snippet compile, incremental caching, and `PublicApi.verified.txt` (public API baseline; an
   API change fails the test until the snapshot is accepted).
-- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files; `verify-ui.ps1` drives it.
+- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files, styled by `AppPresets.cs`;
+  `verify-ui.ps1` drives it (input, theme toggle, light and dark screenshots).
 - `spikes/`: throwaway experiments, outside the shared build settings.
 
 Your own controls: `[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyControl))]`
