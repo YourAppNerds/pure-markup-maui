@@ -13,7 +13,7 @@ public class PublicApiTests
     {
         var api = typeof(ButtonMarkup).Assembly.GeneratePublicApi(new ApiGeneratorOptions
         {
-            ExcludeAttributes = ["System.Runtime.Versioning.TargetFrameworkAttribute", "System.Reflection.AssemblyMetadataAttribute"],
+            ExcludeAttributes = ["System.Runtime.Versioning.TargetFrameworkAttribute", "System.Reflection.AssemblyMetadataAttribute", "System.Runtime.CompilerServices.InternalsVisibleToAttribute"],
         });
         return Verify(api).UseFileName("PublicApi");
     }
