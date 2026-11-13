@@ -1,0 +1,43 @@
+﻿{
+  Diagnostics: [
+    {
+      Message: 'Microsoft.Maui.Controls.ItemsView<TItem>' is generic; no markup methods generated for it,
+      Severity: Info,
+      WarningLevel: 1,
+      Descriptor: {
+        Id: PM0004,
+        Title: Generic type skipped,
+        MessageFormat: '{0}' is generic; no markup methods generated for it,
+        Category: PureMarkup,
+        DefaultSeverity: Info,
+        IsEnabledByDefault: true
+      }
+    },
+    {
+      Message: 'Microsoft.Maui.Controls.View.Callback' has a delegate type; no markup method generated,
+      Severity: Info,
+      WarningLevel: 1,
+      Descriptor: {
+        Id: PM0002,
+        Title: Delegate-typed property skipped,
+        MessageFormat: '{0}' has a delegate type; no markup method generated,
+        Category: PureMarkup,
+        DefaultSeverity: Info,
+        IsEnabledByDefault: true
+      }
+    },
+    {
+      Message: 'Microsoft.Maui.Controls.VisualElement.IsFocused' is read-only; no markup method generated,
+      Severity: Info,
+      WarningLevel: 1,
+      Descriptor: {
+        Id: PM0001,
+        Title: Read-only bindable property skipped,
+        MessageFormat: '{0}' is read-only; no markup method generated,
+        Category: PureMarkup,
+        DefaultSeverity: Info,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}
