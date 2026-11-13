@@ -6,6 +6,8 @@ namespace PureMarkup.Maui.Generators;
 internal static class Emitter
 {
     public const string BindingBase = "global::Microsoft.Maui.Controls.BindingBase";
+    public const string PresetContext = "global::PureMarkup.Maui.PresetContext";
+    public const string Token = "global::PureMarkup.Maui.Token";
 
     public static string Emit(TypeModel type)
     {
@@ -35,11 +37,21 @@ internal static class Emitter
                     Method(sb, method, method.ValueType + " value", $"self.SetValue({method.Target}, value);");
                     sb.AppendLine();
                     Method(sb, method, BindingBase + " binding", $"self.SetBinding({method.Target}, binding);");
+                    if (type.Presets)
+                    {
+                        PresetOverloads(sb, method, method.Target);
+                    }
+
                     break;
                 case MemberKind.Attached:
                     Method(sb, method, method.ValueType + " value", $"{SetMethod(method.Target)}(self, value);");
                     sb.AppendLine();
                     Method(sb, method, BindingBase + " binding", $"self.SetBinding({method.Target}Property, binding);");
+                    if (type.Presets)
+                    {
+                        PresetOverloads(sb, method, method.Target + "Property");
+                    }
+
                     break;
                 case MemberKind.Plain:
                     Method(sb, method, method.ValueType + " value", $"self.{method.Target} = value;");
@@ -58,6 +70,49 @@ internal static class Emitter
 
         sb.AppendLine("}");
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Token overload on the element (dynamic resource), then value, binding and token overloads on
+    /// <c>PresetContext&lt;T&gt;</c>, which record Style setters instead of setting values.
+    /// </summary>
+    private static void PresetOverloads(StringBuilder sb, MethodModel method, string property)
+    {
+        var token = Token + "<" + method.ValueType.TrimEnd('?') + "> token";
+        sb.AppendLine();
+        Method(sb, method, token, $"{Token}.Apply(self, {property}, token);");
+        if (!method.PresetTarget)
+        {
+            return;
+        }
+
+        sb.AppendLine();
+        PresetMethod(sb, method, method.ValueType + " value", $"self.Set({property}, value);");
+        sb.AppendLine();
+        PresetMethod(sb, method, BindingBase + " binding", $"self.Set({property}, binding);");
+        sb.AppendLine();
+        PresetMethod(sb, method, token, $"self.Set({property}, token);");
+    }
+
+    private static void PresetMethod(StringBuilder sb, MethodModel method, string parameter, string body)
+    {
+        if (method.ReceiverIsSealed)
+        {
+            var context = PresetContext + "<" + method.ReceiverType + ">";
+            sb.Append("    public static ").Append(context).Append(' ').Append(method.MethodName)
+                .Append("(this ").Append(context).Append(" self, ").Append(parameter).AppendLine(")");
+        }
+        else
+        {
+            sb.Append("    public static ").Append(PresetContext).Append("<T> ").Append(method.MethodName)
+                .Append("<T>(this ").Append(PresetContext).Append("<T> self, ").Append(parameter)
+                .Append(") where T : ").AppendLine(method.ReceiverType);
+        }
+
+        sb.AppendLine("    {");
+        sb.Append("        ").AppendLine(body);
+        sb.AppendLine("        return self;");
+        sb.AppendLine("    }");
     }
 
     private static string SetMethod(string target)

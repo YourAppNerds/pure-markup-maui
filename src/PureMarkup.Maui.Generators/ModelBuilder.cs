@@ -13,6 +13,8 @@ internal static class ModelBuilder
     public const string AttributeName = "PureMarkup.Maui.GenerateMarkupAttribute";
     private const string DefaultNamespace = "PureMarkup.Maui";
     private const string BindingBaseType = "global::Microsoft.Maui.Controls.BindingBase";
+    private const string PresetContextName = "PureMarkup.Maui.PresetContext`1";
+    private const string TokenName = "PureMarkup.Maui.Token`1";
 
     // Whole-assembly mode skips these namespace segments: framework plumbing and the
     // On<Platform>() platform-specifics API, whose attached properties collide by name.
@@ -37,12 +39,14 @@ internal static class ModelBuilder
         }
 
         var mauiAssembly = compilation.GetTypeByMetadataName("Microsoft.Maui.Controls.BindableObject")?.ContainingAssembly.Identity.GetDisplayName(fullKey: true) ?? "";
+        var presets = HasPresets(compilation);
         var keys = requests
             .Select(r => new WholeAssemblyKey(
                 r.Type.ToDisplayString(TypeFormat),
                 r.Type.ContainingAssembly.Identity.GetDisplayName(fullKey: true),
                 mauiAssembly,
-                r.Namespace))
+                r.Namespace,
+                presets))
             .ToArray();
         return new WholeAssemblyInput(new EquatableArray<WholeAssemblyKey>(keys), compilation);
     }
@@ -75,6 +79,10 @@ internal static class ModelBuilder
             .ToList();
         return Build(compilation, local, ct);
     }
+
+    /// <summary>The runtime preset types ship in PureMarkup.Maui; without them only control overloads are emitted.</summary>
+    private static bool HasPresets(Compilation compilation) =>
+        compilation.GetTypeByMetadataName(PresetContextName) is not null && compilation.GetTypeByMetadataName(TokenName) is not null;
 
     private static bool IsWholeAssemblyFromMetadata(Request request, Compilation compilation)
         => request.WholeAssembly && !SymbolEqualityComparer.Default.Equals(request.Type.ContainingAssembly, compilation.Assembly);
@@ -153,6 +161,8 @@ internal static class ModelBuilder
 
         var accepted = ResolveCollisions(candidates, diagnostics);
 
+        var presets = HasPresets(compilation);
+        var visualElement = compilation.GetTypeByMetadataName("Microsoft.Maui.Controls.VisualElement");
         var classNames = new HashSet<string>(StringComparer.Ordinal);
         var typeModels = accepted
             .GroupBy(c => c.DeclaringType, SymbolEqualityComparer.Default)
@@ -165,8 +175,12 @@ internal static class ModelBuilder
                 new EquatableArray<MethodModel>(g.Methods
                     .OrderBy(c => c.Method.MethodName, StringComparer.Ordinal)
                     .ThenBy(c => c.Method.Kind)
-                    .Select(c => c.Method)
-                    .ToArray())))
+                    .Select(c => presets && visualElement is not null
+                        && (DerivesFrom(c.Receiver, visualElement) || DerivesFrom(visualElement, c.Receiver))
+                        ? c.Method with { PresetTarget = true }
+                        : c.Method)
+                    .ToArray()),
+                presets))
             .ToArray();
 
         return new MarkupModel(new EquatableArray<TypeModel>(typeModels), new EquatableArray<DiagnosticModel>(diagnostics.ToArray()));

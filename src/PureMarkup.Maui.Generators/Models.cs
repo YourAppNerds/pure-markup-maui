@@ -25,6 +25,7 @@ internal enum MemberKind
 /// <param name="ValueType">Fully qualified parameter type (property type or event delegate type).</param>
 /// <param name="Target">Member access: BindableProperty field, Set method, property or event name.</param>
 /// <param name="ActionOverload">Event only: also emit a parameterless Action overload.</param>
+/// <param name="PresetTarget">Receiver is a VisualElement or one of its bases, so a preset can set it.</param>
 internal sealed record MethodModel(
     MemberKind Kind,
     string MethodName,
@@ -32,14 +33,17 @@ internal sealed record MethodModel(
     bool ReceiverIsSealed,
     string ValueType,
     string Target,
-    bool ActionOverload);
+    bool ActionOverload,
+    bool PresetTarget = false);
 
 /// <summary>One generated static class: the methods for one declaring type.</summary>
+/// <param name="Presets">PureMarkup.Maui's preset types are visible: also emit token and PresetContext overloads.</param>
 internal sealed record TypeModel(
     string Namespace,
     string ClassName,
     string DeclaringType,
-    EquatableArray<MethodModel> Methods);
+    EquatableArray<MethodModel> Methods,
+    bool Presets);
 
 internal sealed record DiagnosticModel(string Id, EquatableArray<string> Args);
 
@@ -55,7 +59,8 @@ internal sealed record MarkupModel(
 /// <param name="Assembly">Identity (with version) of the assembly that is walked.</param>
 /// <param name="MauiAssembly">Identity of the Microsoft.Maui.Controls reference the walk resolves against.</param>
 /// <param name="Namespace">Requested output namespace, if any.</param>
-internal sealed record WholeAssemblyKey(string Type, string Assembly, string MauiAssembly, string? Namespace);
+/// <param name="Presets">Whether the preset types (PresetContext, Token) are visible to the compilation.</param>
+internal sealed record WholeAssemblyKey(string Type, string Assembly, string MauiAssembly, string? Namespace, bool Presets);
 
 /// <summary>
 /// Pipeline value for the whole-assembly walk. Equality looks at <see cref="Keys"/> only: the
