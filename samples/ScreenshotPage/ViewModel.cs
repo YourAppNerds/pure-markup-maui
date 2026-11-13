@@ -21,6 +21,12 @@ public sealed class ViewModel : INotifyPropertyChanged
 
     public void Register() => Status = $"Registered: {RegistrationCode}";
 
+    public void Reset()
+    {
+        RegistrationCode = "";
+        Status = "Not registered";
+    }
+
     void Set(ref string field, string value, [CallerMemberName] string? name = null)
     {
         if (field == value) return;
