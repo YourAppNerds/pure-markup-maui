@@ -292,6 +292,13 @@ namespace PureMarkup.Maui
         public static T StrokeThickness<T>(this T self, double value)
             where T : Microsoft.Maui.Controls.Border { }
     }
+    public static class BorderPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.Border { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
+            where T : Microsoft.Maui.Controls.Border { }
+    }
     public static class BoxViewMarkup
     {
         public static T Color<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
@@ -384,6 +391,13 @@ namespace PureMarkup.Maui
         public static T TextTransform<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
             where T : Microsoft.Maui.Controls.Button { }
         public static T TextTransform<T>(this T self, Microsoft.Maui.TextTransform value)
+            where T : Microsoft.Maui.Controls.Button { }
+    }
+    public static class ButtonPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.Button { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
             where T : Microsoft.Maui.Controls.Button { }
     }
     public static class CarouselViewMarkup
@@ -556,6 +570,13 @@ namespace PureMarkup.Maui
         public static T Padding<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
             where T : Microsoft.Maui.Controls.ContentPresenter { }
         public static T Padding<T>(this T self, Microsoft.Maui.Thickness value)
+            where T : Microsoft.Maui.Controls.ContentPresenter { }
+    }
+    public static class ContentPresenterPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.ContentPresenter { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
             where T : Microsoft.Maui.Controls.ContentPresenter { }
     }
     public static class ContentViewMarkup
@@ -951,6 +972,12 @@ namespace PureMarkup.Maui
         public static T Size<T>(this T self, double value)
             where T : Microsoft.Maui.Controls.FontImageSource { }
     }
+    public sealed class FuncConverter<TSource, TTarget> : Microsoft.Maui.Controls.IValueConverter
+    {
+        public FuncConverter(System.Func<TSource, TTarget> convert, System.Func<TTarget, TSource>? convertBack = null) { }
+        public object? Convert(object? value, System.Type targetType, object? parameter, System.Globalization.CultureInfo culture) { }
+        public object? ConvertBack(object? value, System.Type targetType, object? parameter, System.Globalization.CultureInfo culture) { }
+    }
     public static class GeometryGroupMarkup
     {
         public static T Children<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
@@ -965,6 +992,21 @@ namespace PureMarkup.Maui
             where T : Microsoft.Maui.Controls.Shapes.GeometryGroup { }
         public static T OnInvalidateGeometryRequested<T>(this T self, System.EventHandler handler)
             where T : Microsoft.Maui.Controls.Shapes.GeometryGroup { }
+    }
+    public static class GestureSugar
+    {
+        public static T PanGesture<T>(this T self, System.EventHandler<Microsoft.Maui.Controls.PanUpdatedEventArgs> handler, int touchPoints = 1)
+            where T : Microsoft.Maui.Controls.IGestureRecognizers { }
+        public static T PinchGesture<T>(this T self, System.EventHandler<Microsoft.Maui.Controls.PinchGestureUpdatedEventArgs> handler)
+            where T : Microsoft.Maui.Controls.IGestureRecognizers { }
+        public static T SwipeGesture<T>(this T self, Microsoft.Maui.SwipeDirection direction, System.Action handler)
+            where T : Microsoft.Maui.Controls.IGestureRecognizers { }
+        public static T SwipeGesture<T>(this T self, Microsoft.Maui.SwipeDirection direction, System.EventHandler<Microsoft.Maui.Controls.SwipedEventArgs> handler)
+            where T : Microsoft.Maui.Controls.IGestureRecognizers { }
+        public static T TapGesture<T>(this T self, System.Action handler, int numberOfTaps = 1)
+            where T : Microsoft.Maui.Controls.IGestureRecognizers { }
+        public static T TapGesture<T>(this T self, System.EventHandler<Microsoft.Maui.Controls.TappedEventArgs> handler, int numberOfTaps = 1)
+            where T : Microsoft.Maui.Controls.IGestureRecognizers { }
     }
     public static class GradientBrushMarkup
     {
@@ -1023,6 +1065,21 @@ namespace PureMarkup.Maui
         public static T OnStartInteraction<T>(this T self, System.EventHandler<Microsoft.Maui.Controls.TouchEventArgs> handler)
             where T : Microsoft.Maui.Controls.GraphicsView { }
     }
+    public static class GridEnumSugar
+    {
+        public static T Column<T, TColumn>(this T self, TColumn column)
+            where T : Microsoft.Maui.Controls.BindableObject
+            where TColumn :  struct, System.Enum { }
+        public static T Column<T, TColumn>(this T self, TColumn first, TColumn last)
+            where T : Microsoft.Maui.Controls.BindableObject
+            where TColumn :  struct, System.Enum { }
+        public static T Row<T, TRow>(this T self, TRow row)
+            where T : Microsoft.Maui.Controls.BindableObject
+            where TRow :  struct, System.Enum { }
+        public static T Row<T, TRow>(this T self, TRow first, TRow last)
+            where T : Microsoft.Maui.Controls.BindableObject
+            where TRow :  struct, System.Enum { }
+    }
     public static class GridItemsLayoutMarkup
     {
         public static T HorizontalItemSpacing<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
@@ -1072,6 +1129,28 @@ namespace PureMarkup.Maui
             where T : Microsoft.Maui.Controls.BindableObject { }
         public static T RowSpan<T>(this T self, int value)
             where T : Microsoft.Maui.Controls.BindableObject { }
+    }
+    public static class GridRowsColumns
+    {
+        public static Microsoft.Maui.GridLength Auto { get; }
+        public static Microsoft.Maui.GridLength Star { get; }
+        public static Microsoft.Maui.GridLength Stars(double value) { }
+        public static class Columns
+        {
+            public static Microsoft.Maui.Controls.ColumnDefinitionCollection Define(params Microsoft.Maui.GridLength[] widths) { }
+            public static Microsoft.Maui.Controls.ColumnDefinitionCollection Define<TColumn>([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                    "Column",
+                    "Width"})] params System.ValueTuple<TColumn, Microsoft.Maui.GridLength>[] columns)
+                where TColumn :  struct, System.Enum { }
+        }
+        public static class Rows
+        {
+            public static Microsoft.Maui.Controls.RowDefinitionCollection Define(params Microsoft.Maui.GridLength[] heights) { }
+            public static Microsoft.Maui.Controls.RowDefinitionCollection Define<TRow>([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                    "Row",
+                    "Height"})] params System.ValueTuple<TRow, Microsoft.Maui.GridLength>[] rows)
+                where TRow :  struct, System.Enum { }
+        }
     }
     public static class GroupableItemsViewMarkup
     {
@@ -1182,6 +1261,13 @@ namespace PureMarkup.Maui
         public static T Source<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
             where T : Microsoft.Maui.Controls.ImageButton { }
         public static T Source<T>(this T self, Microsoft.Maui.Controls.ImageSource? value)
+            where T : Microsoft.Maui.Controls.ImageButton { }
+    }
+    public static class ImageButtonPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.ImageButton { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
             where T : Microsoft.Maui.Controls.ImageButton { }
     }
     public static class ImageMarkup
@@ -1471,6 +1557,13 @@ namespace PureMarkup.Maui
         public static T VerticalTextAlignment<T>(this T self, Microsoft.Maui.TextAlignment value)
             where T : Microsoft.Maui.Controls.Label { }
     }
+    public static class LabelPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.Label { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
+            where T : Microsoft.Maui.Controls.Label { }
+    }
     public static class LayoutMarkup
     {
         public static T CascadeInputTransparent<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
@@ -1489,6 +1582,50 @@ namespace PureMarkup.Maui
             where T : Microsoft.Maui.Controls.Layout { }
         public static T SafeAreaEdges<T>(this T self, Microsoft.Maui.SafeAreaEdges value)
             where T : Microsoft.Maui.Controls.Layout { }
+    }
+    public static class LayoutPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.Layout { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
+            where T : Microsoft.Maui.Controls.Layout { }
+    }
+    public static class LayoutSugar
+    {
+        public static T Bottom<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T Center<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T CenterHorizontal<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T CenterVertical<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T End<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T FillBoth<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T FillHorizontal<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T FillVertical<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T Font<T>(this T self, double? size = default, bool bold = false, bool italic = false, string? family = null)
+            where T : Microsoft.Maui.Controls.BindableObject, Microsoft.Maui.Controls.Internals.IFontElement { }
+        public static T Height<T>(this T self, double value)
+            where T : Microsoft.Maui.Controls.VisualElement { }
+        public static T Margin<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T Margin<T>(this T self, double left, double top, double right, double bottom)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T Size<T>(this T self, double size)
+            where T : Microsoft.Maui.Controls.VisualElement { }
+        public static T Size<T>(this T self, double width, double height)
+            where T : Microsoft.Maui.Controls.VisualElement { }
+        public static T Start<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T Top<T>(this T self)
+            where T : Microsoft.Maui.Controls.View { }
+        public static T Width<T>(this T self, double value)
+            where T : Microsoft.Maui.Controls.VisualElement { }
     }
     public static class LineGeometryMarkup
     {
@@ -1688,6 +1825,13 @@ namespace PureMarkup.Maui
         public static T Title<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
             where T : Microsoft.Maui.Controls.Page { }
         public static T Title<T>(this T self, string? value)
+            where T : Microsoft.Maui.Controls.Page { }
+    }
+    public static class PagePaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.Page { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
             where T : Microsoft.Maui.Controls.Page { }
     }
     public static class PanGestureRecognizerMarkup
@@ -2130,6 +2274,13 @@ namespace PureMarkup.Maui
         public static T VerticalScrollBarVisibility<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
             where T : Microsoft.Maui.Controls.ScrollView { }
         public static T VerticalScrollBarVisibility<T>(this T self, Microsoft.Maui.ScrollBarVisibility value)
+            where T : Microsoft.Maui.Controls.ScrollView { }
+    }
+    public static class ScrollViewPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.ScrollView { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
             where T : Microsoft.Maui.Controls.ScrollView { }
     }
     public static class SearchBarMarkup
@@ -3009,6 +3160,13 @@ namespace PureMarkup.Maui
         public static T Padding<T>(this T self, Microsoft.Maui.Controls.BindingBase binding)
             where T : Microsoft.Maui.Controls.TemplatedView { }
         public static T Padding<T>(this T self, Microsoft.Maui.Thickness value)
+            where T : Microsoft.Maui.Controls.TemplatedView { }
+    }
+    public static class TemplatedViewPaddingSugar
+    {
+        public static T Padding<T>(this T self, double horizontal, double vertical)
+            where T : Microsoft.Maui.Controls.TemplatedView { }
+        public static T Padding<T>(this T self, double left, double top, double right, double bottom)
             where T : Microsoft.Maui.Controls.TemplatedView { }
     }
     public static class TimePickerMarkup
