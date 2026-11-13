@@ -1,0 +1,22 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.binlog
+artifacts/
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.rsuser
+
+# Packages and test output
+*.nupkg
+*.snupkg
+TestResults/
+AppPackages/
+BundleArtifacts/
