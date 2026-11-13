@@ -19,6 +19,27 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>PureMarkup.Maui</PackageId>
+    <Version>0.1.0-dev</Version>
+    <Description>C# markup for .NET MAUI without XAML: fluent, trimmable extension methods for every Microsoft.Maui.Controls type, plus a source generator for your own controls.</Description>
+    <PackageTags>maui;markup;csharp-markup;source-generator;no-xaml</PackageTags>
+    <PackageProjectUrl>https://github.com/YourAppNerds/pure-markup-maui</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/YourAppNerds/pure-markup-maui</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
+    <!-- Ship the generator so consumers can run [assembly: GenerateMarkup(typeof(MyControl))].
+         The WholeAssembly attribute in GenerateMarkup.cs is [Conditional] and never reaches this
+         assembly's metadata, and the generator reads only the consuming compilation's own
+         attributes, so consumers do not re-generate the MAUI methods. -->
+    <None Include="..\PureMarkup.Maui.Generators\bin\$(Configuration)\netstandard2.0\PureMarkup.Maui.Generators.dll"
+          Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" />
   </ItemGroup>
