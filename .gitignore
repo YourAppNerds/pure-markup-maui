@@ -20,3 +20,6 @@ artifacts/
 TestResults/
 AppPackages/
 BundleArtifacts/
+
+# Verify
+*.received.*

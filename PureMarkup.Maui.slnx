@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PureMarkup.Maui.Generators/PureMarkup.Maui.Generators.csproj" />
+    <Project Path="src/PureMarkup.Maui/PureMarkup.Maui.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PureMarkup.Maui.Generators.Tests/PureMarkup.Maui.Generators.Tests.csproj" />
+  </Folder>
+</Solution>

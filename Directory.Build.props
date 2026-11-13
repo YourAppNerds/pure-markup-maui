@@ -1,0 +1,15 @@
+<Project>
+  <!-- spikes/ are throwaway experiments with their own settings; keep them out of the shared config. -->
+  <PropertyGroup>
+    <PureMarkupIsSpike>$([MSBuild]::MakeRelative($(MSBuildThisFileDirectory), $(MSBuildProjectDirectory)).StartsWith('spikes'))</PureMarkupIsSpike>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(PureMarkupIsSpike)' != 'true'">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>YourAppNerds</Authors>
+    <Copyright>Copyright (c) 2026 YourAppNerds</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
