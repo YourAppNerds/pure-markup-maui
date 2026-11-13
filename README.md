@@ -16,19 +16,26 @@ so chains keep their type. Attached properties (`Grid.Row` -> `.Row(int)`), even
 trees: the library is trimmable and AOT-compatible. Skipped members get `PM000x` info diagnostics.
 
 ## Layout
-- `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0).
+- `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
+  a whole referenced assembly is keyed on assembly identity + attribute arguments, so source
+  edits do not re-run it.
 - `src/PureMarkup.Maui/`: MAUI class library; `GenerateMarkup.cs` runs the generator over all of
   Microsoft.Maui.Controls at build time. TFMs: net10.0, net10.0-windows10.0.19041.0
   (mobile TFMs with `-p:PureMarkupMobile=true`).
-- `tests/PureMarkup.Maui.Generators.Tests/`: xUnit + Verify snapshot tests, a run against the real
-  MAUI reference, and a compile test of the snippet above.
+- `tests/PureMarkup.Maui.Generators.Tests/`: xUnit + Verify: generator snapshots, real-MAUI run,
+  snippet compile, incremental caching, and `PublicApi.verified.txt` (public API baseline; an
+  API change fails the test until the snapshot is accepted).
+- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files; `verify-ui.ps1` drives it.
 - `spikes/`: throwaway experiments, outside the shared build settings.
 
 Your own controls: `[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyControl))]`
-(`Namespace = "..."` picks the output namespace).
+(`Namespace = "..."` picks the output namespace). The package ships the generator, so this
+works in consuming apps; the MAUI methods themselves are not regenerated there.
 
-## Build and test
+## Build, test, pack
 ```
 dotnet build PureMarkup.Maui.slnx
 dotnet test PureMarkup.Maui.slnx
+dotnet pack src/PureMarkup.Maui -c Release -o artifacts/packages
 ```
+The nupkg (0.1.0-dev) holds `lib/` for both TFMs and the generator in `analyzers/dotnet/cs/`.
