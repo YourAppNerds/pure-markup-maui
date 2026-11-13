@@ -15,6 +15,16 @@ so chains keep their type. Attached properties (`Grid.Row` -> `.Row(int)`), even
 (`.OnClicked(...)`) and plain settable properties are covered too. No reflection, no expression
 trees: the library is trimmable and AOT-compatible. Skipped members get `PM000x` info diagnostics.
 
+## Sugar
+A small hand-written layer in `src/PureMarkup.Maui/Sugar/` (same namespace) adds shorthands:
+`.Height(44)`, `.Width()`, `.Size(w, h)`, `.Margin(h, v)`, `.Padding(l, t, r, b)`, `.Center()`,
+`.Start()`, `.End()`, `.Top()`, `.Bottom()`, `.FillBoth()`, `.Font(size, bold, italic, family)`,
+`.TapGesture(...)`, `.SwipeGesture(...)`, `.PanGesture(...)`, `.PinchGesture(...)`,
+`FuncConverter<TSource, TTarget>`, and enum-named grids
+(`using static PureMarkup.Maui.GridRowsColumns;`): `Rows.Define((Row.Title, Auto), (Row.Body, Star))`,
+`.Row(Row.Body)`, `.Column(Col.Label, Col.Input)` (with span). Parts adapted from
+CommunityToolkit.Maui.Markup (MIT, see `THIRD-PARTY-NOTICES.md`).
+
 ## Layout
 - `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
   a whole referenced assembly is keyed on assembly identity + attribute arguments, so source
