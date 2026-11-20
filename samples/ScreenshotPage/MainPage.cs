@@ -13,19 +13,19 @@ public class MainPage : ContentPage
 
     public MainPage()
     {
-        this.BindingContext(_vm).Padding(24).BackgroundColor(Tokens.Page)
+        this.BindingContext(_vm).Padding(24)
             .Content(new Grid
             {
                 Children =
                 {
-                    new Label().Text("Registration").Font(size: 22, bold: true).TextColor(Tokens.Text)
+                    new Label().Text("Registration").Font(size: 22, bold: true)
                         .Row(Row.Title).Column(Col.Label, Col.Input),
 
-                    new Label().Text("Code").FontSize(Tokens.Body).TextColor(Tokens.Text)
+                    new Label().Text("Code")
                         .VerticalTextAlignment(TextAlignment.Center)
                         .Row(Row.Code).Column(Col.Label),
 
-                    // Look comes from the implicit Entry preset registered in App.
+                    // Plain controls get the template look from DefaultLook (registered in App).
                     new Entry()
                         .Keyboard(Keyboard.Numeric).Placeholder("Enter number")
                         .Row(Row.Code).Column(Col.Input)
@@ -40,12 +40,12 @@ public class MainPage : ContentPage
                         .OnClicked(_vm.Reset)
                         .AutomationId("ResetButton"),
 
-                    new Label().Text("Status").FontSize(Tokens.Body).TextColor(Tokens.Text)
+                    new Label().Text("Status")
                         .Row(Row.Status).Column(Col.Label),
 
                     new Label()
                         .Text(Binding.Create(static (ViewModel vm) => vm.Status))
-                        .FontSize(Tokens.Body).TextColor(Tokens.Text)
+                        
                         .Row(Row.Status).Column(Col.Input).Margin(5, 0)
                         .AutomationId("StatusLabel"),
 
