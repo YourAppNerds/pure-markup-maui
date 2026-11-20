@@ -13,7 +13,11 @@ new Entry()
 Per bindable property there is a value and a `BindingBase` overload, generic over the receiver
 so chains keep their type. Attached properties (`Grid.Row` -> `.Row(int)`), events
 (`.OnClicked(...)`) and plain settable properties are covered too. No reflection, no expression
-trees: the library is trimmable and AOT-compatible. Skipped members get `PM000x` info diagnostics.
+trees: the library is trimmable and AOT-compatible, with 0 trim/AOT analyzer warnings, and a
+trimmed (and, as a test, NativeAOT) Windows publish of the sample runs; the iOS/Mac Catalyst
+NativeAOT check still needs a Mac (`docs/trimming-aot.md`). Skipped members get `PM000x` info
+diagnostics. Bind with `Binding.Create(static (VM vm) => vm.Prop)`: analyzer `PM0007` warns when a
+string-path `Binding` reaches a markup method (it needs reflection and breaks under trimming).
 
 ## Sugar
 A small hand-written layer in `src/PureMarkup.Maui/Sugar/` (same namespace) adds shorthands:
