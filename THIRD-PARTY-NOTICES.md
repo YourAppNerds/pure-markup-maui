@@ -35,3 +35,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## .NET MAUI app template (dotnet/maui)
+
+https://github.com/dotnet/maui
+
+Used in `templates/PureMarkup.Maui.Templates/content/puremarkup-app/`: the platform files under
+`Platforms/` (Android, iOS, Mac Catalyst, Windows manifests), the app icon, splash screen,
+`dotnet_bot.png`, `AboutAssets.txt`, the project file layout and template parameters, copied or
+adapted from the `maui-mobile` template. MIT License, Copyright (c) .NET Foundation and
+Contributors (same text as above). The Open Sans fonts shipped with that template are under the
+SIL Open Font License 1.1.

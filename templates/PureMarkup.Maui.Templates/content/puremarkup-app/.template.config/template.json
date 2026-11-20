@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "YourAppNerds",
+  "classifications": [ "MAUI", "Android", "iOS", "Mac Catalyst", "Windows", "Mobile", "C# Markup" ],
+  "identity": "PureMarkup.Maui.App.CSharp",
+  "groupIdentity": "PureMarkup.Maui.App",
+  "name": ".NET MAUI App (PureMarkup, no XAML)",
+  "description": "A .NET MAUI app written in C# markup with PureMarkup.Maui: no XAML files on any platform, including the Windows host.",
+  "shortName": "puremarkup-app",
+  "precedence": "100",
+  "generatorVersions": "[1.0.0.0-*)",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "PureMarkupApp.1",
+  "defaultName": "PureMarkupApp1",
+  "preferNameDirectory": true,
+  "primaryOutputs": [
+    {
+      "condition": "(HostIdentifier != \"dotnetcli\" && HostIdentifier != \"dotnetcli-preview\")",
+      "path": "Pages/MainPage.cs"
+    },
+    {
+      "path": "PureMarkupApp.1.csproj"
+    }
+  ],
+  "postActions": [
+    {
+      "id": "openInEditor",
+      "condition": "(HostIdentifier != \"dotnetcli\" && HostIdentifier != \"dotnetcli-preview\" && HostIdentifier != \"vs\")",
+      "description": "Opens Pages/MainPage.cs in the editor.",
+      "manualInstructions": [ { "text": "Open Pages/MainPage.cs in the editor" } ],
+      "actionId": "84C0DA21-51C8-4541-9940-6CA19AF04EE6",
+      "args": {
+        "files": "0"
+      },
+      "continueOnError": true
+    },
+    {
+      "id": "restore",
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ],
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "copyOnly": [ "**/*.svg", "**/*.ttf", "**/*.png" ],
+      "modifiers": [
+        {
+          "condition": "(!IncludeSampleContent)",
+          "exclude": [
+            "Pages/TodoPage.cs",
+            "ViewModels/TodoViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(NoWindows)",
+          "exclude": [
+            "Platforms/Windows/**",
+            "Properties/launchSettings.json"
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net10.0",
+          "description": "Target net10.0"
+        },
+        {
+          "choice": "net11.0",
+          "description": "Target net11.0 (needs the .NET 11 SDK and MAUI workload)"
+        }
+      ],
+      "replaces": "DOTNET_TFM",
+      "defaultValue": "net10.0"
+    },
+    "applicationId": {
+      "type": "parameter",
+      "description": "Overrides the $(ApplicationId) in the project.",
+      "datatype": "string"
+    },
+    "IncludeSampleContent": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "displayName": "_Include sample content",
+      "description": "Adds a Todo page and a tab bar: enum-named grid rows, two-way bindings, a C# item template and app presets."
+    },
+    "NoWindows": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "displayName": "Leave out _Windows",
+      "description": "Drops the Windows target framework and Platforms/Windows."
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "If specified, skips the automatic restore of the project on create.",
+      "defaultValue": "false"
+    },
+    "pureMarkupVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Version of the PureMarkup.Maui package to reference.",
+      "replaces": "PUREMARKUP_VERSION",
+      "defaultValue": "0.1.0-dev"
+    },
+    "mvvmToolkitVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "replaces": "MVVM_TOOLKIT_VERSION",
+      "defaultValue": "8.4.2"
+    },
+    "msExtensionsLoggingDebugVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "replaces": "MS_EXT_LOG_DEBUG_VERSION",
+      "defaultValue": "10.0.0"
+    },
+    "HostIdentifier": {
+      "type": "bind",
+      "binding": "HostIdentifier"
+    },
+    "PhoneProductId": {
+      "type": "generated",
+      "generator": "guid",
+      "replaces": "$guid9$"
+    },
+    "nameToLower": {
+      "type": "generated",
+      "generator": "casing",
+      "parameters": {
+        "source": "name",
+        "toLower": true
+      }
+    },
+    "nameToAppId": {
+      "type": "generated",
+      "generator": "regex",
+      "dataType": "string",
+      "parameters": {
+        "source": "nameToLower",
+        "steps": [
+          {
+            "regex": "[^a-z0-9_\\.]",
+            "replacement": ""
+          }
+        ]
+      }
+    },
+    "defaultAppId": {
+      "type": "generated",
+      "generator": "join",
+      "parameters": {
+        "symbols": [
+          {
+            "type": "const",
+            "value": "com.companyname."
+          },
+          {
+            "type": "ref",
+            "value": "nameToAppId"
+          }
+        ]
+      }
+    },
+    "finalAppId": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "applicationId",
+        "fallbackVariableName": "defaultAppId"
+      },
+      "replaces": "com.companyname.mauiapp"
+    },
+    "XmlEncodedAppNameParam": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "encode",
+      "replaces": "XmlEncodedAppName"
+    }
+  },
+  "forms": {
+    "encode": {
+      "identifier": "xmlEncode"
+    }
+  }
+}
