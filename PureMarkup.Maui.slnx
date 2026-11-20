@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/IntelliSense/IntelliSense.Bench.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/ScreenshotPage/ScreenshotPage.csproj" />
   </Folder>
