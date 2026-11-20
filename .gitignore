@@ -23,3 +23,6 @@ BundleArtifacts/
 
 # Verify
 *.received.*
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/

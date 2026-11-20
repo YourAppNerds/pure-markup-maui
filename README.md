@@ -106,6 +106,9 @@ rebuilds. Mobile TFMs report SKIP when restore fails with NETSDK1147 (workload m
   `verify-ui.ps1` drives it (input, theme toggle, light and dark screenshots).
 - `benchmarks/IntelliSense/`: console tool measuring completion latency and per-keystroke
   generator work in a consumer project; results in `docs/intellisense-speed.md`. Not packed.
+- `benchmarks/PageConstruction/`: BenchmarkDotNet, the same page built with plain setters,
+  PureMarkup, CommunityToolkit.Maui.Markup, shared Styles and presets; results in
+  `docs/page-construction-benchmarks.md`. Not packed.
 - `spikes/`: throwaway experiments, outside the shared build settings.
 
 Your own controls: `[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyControl))]`
@@ -120,5 +123,6 @@ dotnet pack src/PureMarkup.Maui -c Release -o artifacts/packages
 dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
 powershell -File scripts/verify-template.ps1
 dotnet run -c Release --project benchmarks/IntelliSense
+dotnet run -c Release --project benchmarks/PageConstruction -- --filter *
 ```
 The nupkg (0.1.0-dev) holds `lib/` for both TFMs and the generator in `analyzers/dotnet/cs/`.

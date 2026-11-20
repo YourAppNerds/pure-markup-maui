@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/IntelliSense/IntelliSense.Bench.csproj" />
+    <Project Path="benchmarks/PageConstruction/PageConstruction.Bench.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/ScreenshotPage/ScreenshotPage.csproj" />

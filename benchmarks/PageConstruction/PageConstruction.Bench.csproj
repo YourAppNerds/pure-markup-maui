@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- BenchmarkDotNet: cost of building the same page with PureMarkup, plain setters, presets vs
+       plain Styles, and CommunityToolkit.Maui.Markup. Headless net10.0 (no handlers, no platform
+       views). Not shipped; see docs/page-construction-benchmarks.md. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="CommunityToolkit.Maui.Markup" />
+    <!-- CommunityToolkit.Maui.Markup 8.0.0 (latest for net10) needs Controls >= 10.0.90; the library
+         builds against 10.0.20, so every variant here runs on 10.0.90. -->
+    <PackageReference Include="Microsoft.Maui.Controls" VersionOverride="10.0.90" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PureMarkup.Maui\PureMarkup.Maui.csproj" />
+  </ItemGroup>
+
+</Project>
