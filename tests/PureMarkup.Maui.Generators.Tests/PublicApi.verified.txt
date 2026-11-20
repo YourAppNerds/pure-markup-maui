@@ -7412,3 +7412,83 @@ namespace PureMarkup.Maui
             where T : Microsoft.Maui.Controls.Window { }
     }
 }
+namespace PureMarkup.Maui.Defaults
+{
+    public static class DefaultColors
+    {
+        public static readonly Microsoft.Maui.Graphics.Color Black;
+        public static readonly Microsoft.Maui.Graphics.Color Gray100;
+        public static readonly Microsoft.Maui.Graphics.Color Gray200;
+        public static readonly Microsoft.Maui.Graphics.Color Gray300;
+        public static readonly Microsoft.Maui.Graphics.Color Gray400;
+        public static readonly Microsoft.Maui.Graphics.Color Gray500;
+        public static readonly Microsoft.Maui.Graphics.Color Gray600;
+        public static readonly Microsoft.Maui.Graphics.Color Gray900;
+        public static readonly Microsoft.Maui.Graphics.Color Gray950;
+        public static readonly Microsoft.Maui.Graphics.Color Magenta;
+        public static readonly Microsoft.Maui.Graphics.Color MidnightBlue;
+        public static readonly Microsoft.Maui.Graphics.Color OffBlack;
+        public static readonly Microsoft.Maui.Graphics.Color Primary;
+        public static readonly Microsoft.Maui.Graphics.Color PrimaryDark;
+        public static readonly Microsoft.Maui.Graphics.Color PrimaryDarkText;
+        public static readonly Microsoft.Maui.Graphics.Color Secondary;
+        public static readonly Microsoft.Maui.Graphics.Color SecondaryDarkText;
+        public static readonly Microsoft.Maui.Graphics.Color Tertiary;
+        public static readonly Microsoft.Maui.Graphics.Color White;
+    }
+    public static class DefaultLook
+    {
+        public const string FontFamilyKey = "PureMarkup.Defaults.FontFamily";
+        public const string TemplateFontFamily = "OpenSansRegular";
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.ActivityIndicator> ActivityIndicator { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Border> Border { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.BoxView> BoxView { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Button> Button { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.CheckBox> CheckBox { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.DatePicker> DatePicker { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Editor> Editor { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Entry> Entry { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Label> Headline { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.ImageButton> ImageButton { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.IndicatorView> IndicatorView { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Label> Label { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.NavigationPage> NavigationPage { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Page> Page { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Picker> Picker { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.ProgressBar> ProgressBar { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.RadioButton> RadioButton { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.RefreshView> RefreshView { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.SearchBar> SearchBar { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Shell> Shell { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Slider> Slider { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Label> SubHeadline { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.Switch> Switch { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.TabbedPage> TabbedPage { get; }
+        public static PureMarkup.Maui.Preset<Microsoft.Maui.Controls.TimePicker> TimePicker { get; }
+        public static Microsoft.Maui.Controls.ResourceDictionary UseDefaultLook(this Microsoft.Maui.Controls.ResourceDictionary resources, string? fontFamily = "OpenSansRegular") { }
+    }
+    public static class DefaultTokens
+    {
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Accent;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> ButtonBackground;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> ButtonText;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Disabled;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Headline;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Inactive;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Muted;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> NavigationBarText;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> PageBackground;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> PickerText;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Secondary;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> SelectedIndicator;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> ShellForeground;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Strong;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> SwitchOffThumb;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> SwitchOnTrack;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> TabBarBackground;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> TabBarForeground;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> TabbedBarBackground;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Text;
+        public static readonly PureMarkup.Maui.Token<Microsoft.Maui.Graphics.Color> Track;
+    }
+}
