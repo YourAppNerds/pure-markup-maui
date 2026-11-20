@@ -22,6 +22,18 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
+  <!-- Trim/AOT check (docs/trimming-aot.md): -p:PureMarkupTrimCheck=true turns on trimmed publish
+       and the AOT analyzers here only; passing PublishTrimmed globally would reach the
+       netstandard2.0 generator project and fail with NETSDK1124. -->
+  <PropertyGroup Condition="'$(PureMarkupTrimCheck)' == 'true'">
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishAot Condition="'$(PureMarkupAotCheck)' == 'true'">true</PublishAot>
+    <IsAotCompatible>true</IsAotCompatible>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!-- MAUI otherwise hides trim warnings unless TrimMode=full (see the library csproj). -->
+    <_MauiDoNotConfigureTrimAnalyzer>true</_MauiDoNotConfigureTrimAnalyzer>
+  </PropertyGroup>
+
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
