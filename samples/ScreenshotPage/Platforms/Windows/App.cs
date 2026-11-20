@@ -7,7 +7,7 @@ namespace ScreenshotPage.WinUI;
 /// XAML compiler does not generate the IXamlMetadataProvider part, so this class forwards to the
 /// providers of WinUI controls, MAUI Controls and MAUI Core (see spikes/windows-no-appxaml).
 /// </summary>
-public class App : MauiWinUIApplication, IXamlMetadataProvider
+public partial class App : MauiWinUIApplication, IXamlMetadataProvider
 {
     readonly IXamlMetadataProvider[] _providers =
     [
