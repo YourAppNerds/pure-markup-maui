@@ -208,12 +208,94 @@ internal static class PresetCache
 
 /// <summary>
 /// Hot Reload: an edited preset lambda keeps its delegate identity, so the cache would keep the old
-/// Style. Clearing it makes elements created after the edit pick up the new setters (existing
-/// elements keep their Style; MAUI setters do not update live).
+/// Style. <see cref="ClearCache"/> drops it; <see cref="UpdateApplication"/> then recompiles every
+/// preset still in use and swaps the new Style in: implicit defaults by replacing the resource
+/// (MAUI re-resolves implicit styles live), <c>.Use</c> elements by reassigning
+/// <see cref="VisualElement.Style"/>. Tracking is weak and only on when the runtime supports
+/// metadata updates (a debug session or <c>dotnet watch</c>), so release apps pay nothing.
 /// </summary>
 internal static class PresetHotReload
 {
+    internal static bool Enabled { get; set; } = System.Reflection.Metadata.MetadataUpdater.IsSupported;
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<VisualElement, Tracked> Used = new();
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ResourceDictionary, Dictionary<string, Tracked>> Defaults = new();
+
     public static void ClearCache(Type[]? updatedTypes) => PresetCache.Clear();
+
+    public static void UpdateApplication(Type[]? updatedTypes)
+    {
+        if (!Enabled)
+        {
+            return;
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is { IsDispatchRequired: true })
+        {
+            dispatcher.Dispatch(Reapply);
+        }
+        else
+        {
+            Reapply();
+        }
+    }
+
+    internal static void TrackUse(VisualElement element, Func<Style> style, Style current)
+    {
+        if (Enabled)
+        {
+            Used.AddOrUpdate(element, new Tracked(style, current));
+        }
+    }
+
+    internal static void TrackDefault(ResourceDictionary resources, string key, Func<Style> style, Style current)
+    {
+        if (Enabled)
+        {
+            var map = Defaults.GetOrCreateValue(resources);
+            lock (map)
+            {
+                map[key] = new Tracked(style, current);
+            }
+        }
+    }
+
+    /// <summary>Recompiles tracked presets and swaps the Styles in, unless the app replaced them since.</summary>
+    internal static void Reapply()
+    {
+        foreach (var (resources, map) in Defaults)
+        {
+            KeyValuePair<string, Tracked>[] items;
+            lock (map)
+            {
+                items = [.. map];
+            }
+
+            foreach (var (key, tracked) in items)
+            {
+                if (resources.TryGetValue(key, out var value) && ReferenceEquals(value, tracked.Last))
+                {
+                    resources[key] = tracked.Last = tracked.Get();
+                }
+            }
+        }
+
+        foreach (var (element, tracked) in Used)
+        {
+            if (ReferenceEquals(element.Style, tracked.Last))
+            {
+                element.Style = tracked.Last = tracked.Get();
+            }
+        }
+    }
+
+    private sealed class Tracked(Func<Style> get, Style last)
+    {
+        public Func<Style> Get { get; } = get;
+
+        public Style Last { get; set; } = last;
+    }
 }
 
 /// <summary>Applying presets to elements and registering app-wide defaults.</summary>
@@ -230,6 +312,11 @@ public static class PresetExtensions
         ArgumentNullException.ThrowIfNull(preset);
         var compiled = preset.Compiled;
         self.Style = compiled.Style;
+        if (PresetHotReload.Enabled)
+        {
+            PresetHotReload.TrackUse(self, () => preset.Style, compiled.Style);
+        }
+
         foreach (var action in compiled.Actions)
         {
             action(self);
@@ -250,7 +337,14 @@ public static class PresetExtensions
     {
         ArgumentNullException.ThrowIfNull(resources);
         ArgumentNullException.ThrowIfNull(preset);
-        resources[typeof(T).FullName!] = preset.Style;
+        var key = typeof(T).FullName!;
+        var style = preset.Style;
+        resources[key] = style;
+        if (PresetHotReload.Enabled)
+        {
+            PresetHotReload.TrackDefault(resources, key, () => preset.Style, style);
+        }
+
         return resources;
     }
 

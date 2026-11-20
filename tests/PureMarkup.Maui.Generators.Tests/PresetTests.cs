@@ -199,6 +199,44 @@ public class PresetTests
         Assert.NotSame(first, Field.Style);
     }
 
+    private static double _hotSize = 15;
+
+    private static Preset<Entry> Hot => Preset.Once<Entry>(static p => p.FontSize(_hotSize));
+
+    [Fact]
+    public void HotReloadReappliesLiveStyles()
+    {
+        var was = PresetHotReload.Enabled;
+        PresetHotReload.Enabled = true;
+        try
+        {
+            _hotSize = 15;
+            var page = new ContentPage();
+            page.Resources.Default(Hot);
+            var plain = new Entry();
+            var used = new Entry().Use(Hot);
+            var replaced = new Entry().Use(Hot);
+            var mine = new Style(typeof(Entry));
+            replaced.Style = mine;
+            page.Content = new VerticalStackLayout { plain, used, replaced };
+            Assert.Equal((15d, 15d), (plain.FontSize, used.FontSize));
+
+            // Stands in for an edited lambda body: same delegate, new setter values.
+            _hotSize = 25;
+            PresetHotReload.ClearCache(null);
+            PresetHotReload.UpdateApplication(null);
+
+            Assert.Equal(25, plain.FontSize);   // implicit default resource replaced
+            Assert.Equal(25, used.FontSize);    // .Use element restyled
+            Assert.Same(mine, replaced.Style);  // a Style the app set itself is left alone
+        }
+        finally
+        {
+            PresetHotReload.Enabled = was;
+            _hotSize = 15;
+        }
+    }
+
     private sealed class MyEntry : Entry;
 
     internal sealed class Flag : INotifyPropertyChanged

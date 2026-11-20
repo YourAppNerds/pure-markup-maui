@@ -44,8 +44,9 @@ still apply underneath). `.Also(e => ...)` covers events and plain properties; i
 `.Use`/`.New`, not for implicit defaults. `Token<T>` (`new Token<Color>(light, dark)`) works on
 elements and in presets. `AppThemeBinding` is internal on net10, so tokens are dynamic resources:
 `UsePresets` (or `Theme.Attach(app)`) writes them into `app.Resources` and rewrites them on
-`RequestedThemeChanged`, so theme switches update live. A `MetadataUpdateHandler` clears the preset
-cache on Hot Reload; existing elements keep their Style.
+`RequestedThemeChanged`, so theme switches update live. On Hot Reload a `MetadataUpdateHandler`
+clears the preset cache and swaps the recompiled Styles into live elements (implicit defaults and
+`.Use`); tracking is weak and only on when the runtime supports metadata updates.
 
 ## Layout
 - `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
