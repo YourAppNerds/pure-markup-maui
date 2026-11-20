@@ -48,6 +48,16 @@ elements and in presets. `AppThemeBinding` is internal on net10, so tokens are d
 clears the preset cache and swaps the recompiled Styles into live elements (implicit defaults and
 `.Use`); tracking is weak and only on when the runtime supports metadata updates.
 
+## Default look
+`PureMarkup.Maui.Defaults` ports the MAUI app template's `Styles.xaml` and `Colors.xaml`:
+`this.UsePresets(r => r.UseDefaultLook())` registers `DefaultLook` presets as implicit styles for
+23 control and page types (with their Disabled states and Switch On/Off), colors come from
+`DefaultColors` and the light/dark `DefaultTokens`. Derive with `DefaultLook.Button.With(...)`; a
+later `r.Default(...)` for the same type replaces that type's default. `Headline` and
+`SubHeadline` are the template's keyed label styles. The font is the template's `OpenSansRegular`
+alias (`UseDefaultLook(fontFamily: null)` keeps the platform font). As with XAML implicit styles,
+visual-state setters of a default rank below local values.
+
 ## Layout
 - `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
   a whole referenced assembly is keyed on assembly identity + attribute arguments, so source
@@ -58,7 +68,8 @@ clears the preset cache and swaps the recompiled Styles into live elements (impl
 - `tests/PureMarkup.Maui.Generators.Tests/`: xUnit + Verify: generator snapshots, real-MAUI run,
   snippet compile, incremental caching, and `PublicApi.verified.txt` (public API baseline; an
   API change fails the test until the snapshot is accepted).
-- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files, styled by `AppPresets.cs`;
+- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files, styled by `UseDefaultLook()`
+  plus `AppPresets.cs`;
   `verify-ui.ps1` drives it (input, theme toggle, light and dark screenshots).
 - `spikes/`: throwaway experiments, outside the shared build settings.
 
