@@ -167,7 +167,7 @@ public class DefaultLookTests
         Assert.Equal(Pick(theme, C.White, C.OffBlack), nav.BarBackgroundColor);
         Assert.Equal(Pick(theme, C.Gray200, C.White), nav.BarTextColor);
 
-        // TabbedPage and Shell need a dispatcher to construct; check their Styles' setters instead.
+        // TabbedPage and Shell need a dispatcher to construct; PagePresetTests covers live instances.
         var tabs = DefaultLook.TabbedPage.Style;
         Assert.Equal(Pick(theme, C.White, C.Gray950), Value(tabs, TabbedPage.BarBackgroundColorProperty, theme));
         Assert.Equal(Pick(theme, C.Magenta, C.White), Value(tabs, TabbedPage.BarTextColorProperty, theme));
