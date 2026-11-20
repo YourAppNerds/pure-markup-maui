@@ -40,7 +40,10 @@ this.UsePresets(r => r.Default(AppPresets.Field));   // in App(): implicit look 
 MAUI specificity applies: local values beat preset values; `.State(...)`, `.Trigger(...)` and
 `.DataTrigger(...)` setters beat local values while active; `.With` beats its base; `.Use` replaces
 an earlier `.Use` and beats the implicit default where both set a property (other implicit setters
-still apply underneath). `.Also(e => ...)` covers events and plain properties; it runs at
+still apply underneath). One exception: visual-state setters of an implicit default
+(`r.Default(...)`, `UseDefaultLook()`) rank below local values, as with XAML implicit styles, so
+`new Entry().BackgroundColor(Red)` under a default with a Disabled state stays red when disabled,
+while the same state from `.Use(...)` still wins. `.Also(e => ...)` covers events and plain properties; it runs at
 `.Use`/`.New`, not for implicit defaults. `Token<T>` (`new Token<Color>(light, dark)`) works on
 elements and in presets. `AppThemeBinding` is internal on net10, so tokens are dynamic resources:
 `UsePresets` (or `Theme.Attach(app)`) writes them into `app.Resources` and rewrites them on
