@@ -24,6 +24,11 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor MauiNotReferenced = Create(
         "PM0006", "Microsoft.Maui.Controls not referenced", "GenerateMarkup needs a reference to Microsoft.Maui.Controls", DiagnosticSeverity.Warning);
 
+    public static readonly DiagnosticDescriptor StringPathBinding = Create(
+        "PM0007", "String-path binding passed to a markup method",
+        "'{0}' gets a string-path Binding, which needs reflection and breaks under trimming and NativeAOT; use Binding.Create(static (TSource s) => s.Property)",
+        DiagnosticSeverity.Warning);
+
     public static DiagnosticDescriptor? Find(string id) => id switch
     {
         "PM0001" => ReadOnly,
@@ -32,6 +37,7 @@ internal static class Diagnostics
         "PM0004" => GenericType,
         "PM0005" => UnsupportedAttachedTarget,
         "PM0006" => MauiNotReferenced,
+        "PM0007" => StringPathBinding,
         _ => null,
     };
 

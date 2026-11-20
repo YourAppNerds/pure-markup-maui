@@ -11,3 +11,4 @@ PM0003 | PureMarkup | Info | Name collision skipped
 PM0004 | PureMarkup | Info | Generic type skipped
 PM0005 | PureMarkup | Info | Attached property target not supported
 PM0006 | PureMarkup | Warning | Microsoft.Maui.Controls not referenced
+PM0007 | PureMarkup | Warning | String-path binding passed to a markup method
