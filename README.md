@@ -58,6 +58,32 @@ later `r.Default(...)` for the same type replaces that type's default. `Headline
 alias (`UseDefaultLook(fontFamily: null)` keeps the platform font). As with XAML implicit styles,
 visual-state setters of a default rank below local values.
 
+## Templates
+`PureMarkup.Maui.Templates` (`templates/PureMarkup.Maui.Templates/`) holds two `dotnet new`
+templates with no XAML files on any platform:
+```
+dotnet new install PureMarkup.Maui.Templates
+dotnet new puremarkup-app -n MyApp
+dotnet new puremarkup-page -n SettingsPage -o Pages
+```
+`puremarkup-app` options: `--framework net10.0|net11.0` (net11.0 is wired but not built yet),
+`--applicationId`, `--sample-content` (a Todo tab: enum-named grid, two-way bindings, a C# item
+template), `--no-windows` (drops the Windows TFM and `Platforms/Windows`), `--puremarkup-version`.
+The app has `MauiProgram.cs`, `App.cs` (`UseDefaultLook()`), `AppShell.cs`, `Pages/MainPage.cs`,
+`ViewModels/MainViewModel.cs` (CommunityToolkit.Mvvm), `Resources/Theme/Tokens.cs` and
+`AppPresets.cs` (presets derived with `DefaultLook.X.With(...)`), the stock template's images and
+fonts, `IsAotCompatible`, and on Windows the C# WinUI host from `spikes/windows-no-appxaml`
+(`Platforms/Windows/App.cs` + `Program.cs`, `AppxGeneratePriEnabled`). `puremarkup-page` takes the
+project's `RootNamespace` unless `--namespace` is given. Template sources are under `content/`;
+`Microsoft.TemplateEngine.Authoring.Tasks` validates them on pack. The template references
+PureMarkup.Maui at the library's `<Version>` (a check in the verify script).
+
+`scripts/verify-template.ps1` (Windows PowerShell) packs both packages, installs the templates into
+a private hive, instantiates default, `--sample-content`, `--no-windows` and `--framework net11.0`
+into a temp folder with `artifacts/packages` as a feed, checks for zero `.xaml`, builds the Windows
+TFM, runs the default and sample apps through UI Automation, adds a page with `puremarkup-page` and
+rebuilds. Mobile TFMs report SKIP when restore fails with NETSDK1147 (workload missing).
+
 ## Layout
 - `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
   a whole referenced assembly is keyed on assembly identity + attribute arguments, so source
@@ -82,5 +108,7 @@ works in consuming apps; the MAUI methods themselves are not regenerated there.
 dotnet build PureMarkup.Maui.slnx
 dotnet test PureMarkup.Maui.slnx
 dotnet pack src/PureMarkup.Maui -c Release -o artifacts/packages
+dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
+powershell -File scripts/verify-template.ps1
 ```
 The nupkg (0.1.0-dev) holds `lib/` for both TFMs and the generator in `analyzers/dotnet/cs/`.
