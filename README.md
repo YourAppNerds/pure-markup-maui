@@ -10,7 +10,7 @@ new Entry()
     .Text(Binding.Create(static (ViewModel vm) => vm.RegistrationCode, BindingMode.TwoWay))
 ```
 
-Per bindable property there is a value and a `BindingBase` overload, generic over the receiver
+Per bindable property there is a value, a `BindingBase` and a `Token<T>` overload, generic over the receiver
 so chains keep their type. Attached properties (`Grid.Row` -> `.Row(int)`), events
 (`.OnClicked(...)`) and plain settable properties are covered too. No reflection, no expression
 trees: the library is trimmable and AOT-compatible, with 0 trim/AOT analyzer warnings, and a
@@ -18,6 +18,12 @@ trimmed (and, as a test, NativeAOT) Windows publish of the sample runs; the iOS/
 NativeAOT check still needs a Mac (`docs/trimming-aot.md`). Skipped members get `PM000x` info
 diagnostics. Bind with `Binding.Create(static (VM vm) => vm.Prop)`: analyzer `PM0007` warns when a
 string-path `Binding` reaches a markup method (it needs reflection and breaks under trimming).
+
+## Docs
+[Getting started](docs/getting-started.md) · [Markup API](docs/markup-api.md) ·
+[Presets and theming](docs/presets-theming.md) · [Diagnostics](docs/diagnostics.md) ·
+[Migrating from CommunityToolkit.Maui.Markup](docs/migrating-from-communitytoolkit-markup.md) ·
+[all docs](docs/README.md)
 
 ## Sugar
 A small hand-written layer in `src/PureMarkup.Maui/Sugar/` (same namespace) adds shorthands:
@@ -41,49 +47,20 @@ new Entry().Use(AppPresets.Numeric).FontSize(18);   // local value wins, in any 
 AppPresets.Field.New();                              // new Entry().Use(...)
 this.UsePresets(r => r.Default(AppPresets.Field));   // in App(): implicit look for plain new Entry()
 ```
-MAUI specificity applies: local values beat preset values; `.State(...)`, `.Trigger(...)` and
-`.DataTrigger(...)` setters beat local values while active; `.With` beats its base; `.Use` replaces
-an earlier `.Use` and beats the implicit default where both set a property (other implicit setters
-still apply underneath). One exception: visual-state setters of an implicit default
-(`r.Default(...)`, `UseDefaultLook()`) rank below local values, as with XAML implicit styles, so
-`new Entry().BackgroundColor(Red)` under a default with a Disabled state stays red when disabled,
-while the same state from `.Use(...)` still wins. `.Also(e => ...)` covers events and plain properties; it runs at
-`.Use`/`.New`, not for implicit defaults. `Token<T>` (`new Token<Color>(light, dark)`) works on
-elements and in presets. `AppThemeBinding` is internal on net10, so tokens are dynamic resources:
-`UsePresets` (or `Theme.Attach(app)`) writes them into `app.Resources` and rewrites them on
-`RequestedThemeChanged`, so theme switches update live. On Hot Reload a `MetadataUpdateHandler`
-clears the preset cache and swaps the recompiled Styles into live elements (implicit defaults and
-`.Use`); tracking is weak and only on when the runtime supports metadata updates.
-
-## Default look
-`PureMarkup.Maui.Defaults` ports the MAUI app template's `Styles.xaml` and `Colors.xaml`:
-`this.UsePresets(r => r.UseDefaultLook())` registers `DefaultLook` presets as implicit styles for
-23 control and page types (with their Disabled states and Switch On/Off), colors come from
-`DefaultColors` and the light/dark `DefaultTokens`. Derive with `DefaultLook.Button.With(...)`; a
-later `r.Default(...)` for the same type replaces that type's default. `Headline` and
-`SubHeadline` are the template's keyed label styles. The font is the template's `OpenSansRegular`
-alias (`UseDefaultLook(fontFamily: null)` keeps the platform font). As with XAML implicit styles,
-visual-state setters of a default rank below local values.
+`Token<T>` (`new Token<Color>(light, dark)`) works on elements and in presets and follows the app
+theme live. `this.UsePresets(r => r.UseDefaultLook())` applies the stock MAUI template's look
+(`Styles.xaml` + `Colors.xaml`) to 23 control and page types; derive with `DefaultLook.Button.With(...)`.
+Precedence rules, triggers, tokens, the net10 theme workaround and Hot Reload:
+[docs/presets-theming.md](docs/presets-theming.md).
 
 ## Templates
 `PureMarkup.Maui.Templates` (`templates/PureMarkup.Maui.Templates/`) holds two `dotnet new`
-templates with no XAML files on any platform:
-```
-dotnet new install PureMarkup.Maui.Templates
-dotnet new puremarkup-app -n MyApp
-dotnet new puremarkup-page -n SettingsPage -o Pages
-```
-`puremarkup-app` options: `--framework net10.0|net11.0` (net11.0 is wired but not built yet),
-`--applicationId`, `--sample-content` (a Todo tab: enum-named grid, two-way bindings, a C# item
-template), `--no-windows` (drops the Windows TFM and `Platforms/Windows`), `--puremarkup-version`.
-The app has `MauiProgram.cs`, `App.cs` (`UseDefaultLook()`), `AppShell.cs`, `Pages/MainPage.cs`,
-`ViewModels/MainViewModel.cs` (CommunityToolkit.Mvvm), `Resources/Theme/Tokens.cs` and
-`AppPresets.cs` (presets derived with `DefaultLook.X.With(...)`), the stock template's images and
-fonts, `IsAotCompatible`, and on Windows the C# WinUI host from `spikes/windows-no-appxaml`
-(`Platforms/Windows/App.cs` + `Program.cs`, `AppxGeneratePriEnabled`). `puremarkup-page` takes the
-project's `RootNamespace` unless `--namespace` is given. Template sources are under `content/`;
-`Microsoft.TemplateEngine.Authoring.Tasks` validates them on pack. The template references
-PureMarkup.Maui at the library's `<Version>` (a check in the verify script).
+templates with no XAML files on any platform: `puremarkup-app` and `puremarkup-page`. The packages
+are not on NuGet yet; [docs/getting-started.md](docs/getting-started.md) installs them from
+`artifacts/packages`, lists the options, and covers the NETSDK1147 restore error on machines without
+the mobile workloads. Template sources are under `content/`; `Microsoft.TemplateEngine.Authoring.Tasks`
+validates them on pack. The template references PureMarkup.Maui at the library's `<Version>` (a
+check in the verify script).
 
 `scripts/verify-template.ps1` (Windows PowerShell) packs both packages, installs the templates into
 a private hive, instantiates default, `--sample-content`, `--no-windows` and `--framework net11.0`
@@ -113,7 +90,8 @@ rebuilds. Mobile TFMs report SKIP when restore fails with NETSDK1147 (workload m
 
 Your own controls: `[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyControl))]`
 (`Namespace = "..."` picks the output namespace). The package ships the generator, so this
-works in consuming apps; the MAUI methods themselves are not regenerated there.
+works in consuming apps; the MAUI methods themselves are not regenerated there. Naming rules and
+options: [docs/markup-api.md](docs/markup-api.md).
 
 ## Build, test, pack
 ```
