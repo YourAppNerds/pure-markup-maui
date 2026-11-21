@@ -135,6 +135,11 @@ Analyzer `PM0007` warns when one reaches a markup method.
 You can skip a binding when the value does not change.
 Pass a command straight from the view model: `.Command(vm.SaveCommand)`.
 
+MAUI's binding generator cannot see members that another source generator writes.
+A `[RelayCommand]` command from CommunityToolkit.Mvvm is one example.
+A `Binding.Create` lambda that reads one fails with error `BSG0006`.
+Pass such a command directly, as above.
+
 Set the binding context like any other property: `this.BindingContext(vm)`.
 
 ## Layouts and children
