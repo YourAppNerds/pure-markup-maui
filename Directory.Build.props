@@ -11,5 +11,17 @@
     <Authors>YourAppNerds</Authors>
     <Copyright>Copyright (c) 2026 YourAppNerds</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/YourAppNerds/pure-markup-maui</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/YourAppNerds/pure-markup-maui</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageTags>maui;markup;csharp;xaml-free;source-generator</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(PureMarkupIsSpike)' != 'true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

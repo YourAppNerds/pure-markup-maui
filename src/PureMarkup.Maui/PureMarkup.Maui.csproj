@@ -25,17 +25,13 @@
 
   <PropertyGroup>
     <PackageId>PureMarkup.Maui</PackageId>
-    <Version>0.1.0-dev</Version>
+    <Version>0.1.0-preview.1</Version>
     <Description>C# markup for .NET MAUI without XAML: fluent, trimmable extension methods for every Microsoft.Maui.Controls type, plus a source generator for your own controls.</Description>
-    <PackageTags>maui;markup;csharp-markup;source-generator;no-xaml</PackageTags>
-    <PackageProjectUrl>https://github.com/YourAppNerds/pure-markup-maui</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/YourAppNerds/pure-markup-maui</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(IntermediateOutputPath)README.nuget.md" Pack="true" PackagePath="README.md" Visible="false" />
     <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" Visible="false" />
     <!-- Ship the generator so consumers can run [assembly: GenerateMarkup(typeof(MyControl))].
          The WholeAssembly attribute in GenerateMarkup.cs is [Conditional] and never reaches this
@@ -57,5 +53,27 @@
     <ProjectReference Include="..\PureMarkup.Maui.Generators\PureMarkup.Maui.Generators.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <!-- NuGet.org renders the readme without the repo around it: point relative links at GitHub. -->
+  <UsingTask TaskName="PureMarkupRewriteReadme" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Source ParameterType="System.String" Required="true" />
+      <Destination ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs"><![CDATA[
+var text = System.IO.File.ReadAllText(Source);
+text = System.Text.RegularExpressions.Regex.Replace(text, @"\]\((?!https?:|#|mailto:)([^)\s]+)\)",
+    "](https://github.com/YourAppNerds/pure-markup-maui/blob/main/$1)");
+System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Destination));
+System.IO.File.WriteAllText(Destination, text);
+]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="PureMarkupNuGetReadme" BeforeTargets="_GetPackageFiles;GenerateNuspec;_LoadPackInputItems">
+    <PureMarkupRewriteReadme Source="$(MSBuildThisFileDirectory)..\..\README.md"
+                             Destination="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)README.nuget.md" />
+  </Target>
 
 </Project>
