@@ -144,4 +144,40 @@ public class FakeMauiSnapshotTests
         var text = driver.GetRunResult().GeneratedTrees.Single(t => t.FilePath.EndsWith("ButtonMarkup.g.cs")).ToString();
         Assert.Contains("namespace MyApp.Markup;", text);
     }
+
+    private const string WholeAssemblyAttribute =
+        "[assembly: PureMarkup.Maui.GenerateMarkup(typeof(Microsoft.Maui.Controls.View), WholeAssembly = true)]";
+
+    private static string WithAttributes(params string[] attributes) =>
+        FakeMaui.Replace(WholeAssemblyAttribute, string.Join("\n", attributes));
+
+    private static Dictionary<string, string> GeneratedFiles(GeneratorDriver driver) =>
+        driver.GetRunResult().GeneratedTrees.ToDictionary(t => Path.GetFileName(t.FilePath), t => t.ToString());
+
+    private static string[] FileNames(GeneratorDriver driver) =>
+        GeneratedFiles(driver).Keys.OrderBy(k => k, StringComparer.Ordinal).ToArray();
+
+    private static void AssertNoErrors(Compilation output) =>
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+
+    [Fact]
+    public void EachAttributeUsesItsOwnNamespace()
+    {
+        var source = WithAttributes(
+            """[assembly: PureMarkup.Maui.GenerateMarkup(typeof(Microsoft.Maui.Controls.Button), Namespace = "A.Markup")]""",
+            """[assembly: PureMarkup.Maui.GenerateMarkup(typeof(Microsoft.Maui.Controls.Grid), Namespace = "B.Markup")]""",
+            """[assembly: PureMarkup.Maui.GenerateMarkup(typeof(Microsoft.Maui.Controls.Label))]""")
+            + """
+
+            namespace UseA { using A.Markup; static class U { static void M() => new Microsoft.Maui.Controls.Button().OnClicked(() => { }); } }
+            namespace UseB { using B.Markup; static class U { static void M() => new Microsoft.Maui.Controls.Button().Row(1); } }
+            """;
+        var (driver, output, _) = TestCompilation.Run(TestCompilation.Create(source, TestCompilation.Runtime));
+
+        AssertNoErrors(output);
+        var files = GeneratedFiles(driver);
+        Assert.Contains("namespace A.Markup;", files["ButtonMarkup.g.cs"]);
+        Assert.Contains("namespace B.Markup;", files["GridMarkup.g.cs"]);
+        Assert.Contains("namespace PureMarkup.Maui;", files["LabelMarkup.g.cs"]);
+    }
 }

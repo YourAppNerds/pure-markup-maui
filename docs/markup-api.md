@@ -234,9 +234,8 @@ Things to know:
 - Without `WholeAssembly`, only the members declared on the named type are generated.
   Members it inherits from MAUI types already have methods.
   For a base class of your own, add an attribute for it too, or use `WholeAssembly`.
-- The generator uses one namespace per project.
-  If attributes name different namespaces, one of them is used for all.
-  Give every attribute in a project the same `Namespace`.
+- Each attribute's classes go to that attribute's `Namespace` (or `PureMarkup.Maui` if it has none).
+  A type reached by two attributes uses the first one's namespace.
 - The generator adds the attribute class to your project for you.
   It is `[Conditional]`, so it does not end up in your compiled assembly.
 - The project must reference `Microsoft.Maui.Controls`.

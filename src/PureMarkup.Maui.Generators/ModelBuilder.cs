@@ -133,27 +133,29 @@ internal static class ModelBuilder
             return new MarkupModel(EquatableArray<TypeModel>.Empty, new EquatableArray<DiagnosticModel>(diagnostics.ToArray()));
         }
 
-        var ns = DefaultNamespace;
-        var types = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        // Each type goes to the namespace of the attribute that names it. A type reached by several
+        // attributes keeps the first one, in attribute order.
+        var namespaces = new Dictionary<INamedTypeSymbol, string>(SymbolEqualityComparer.Default);
         foreach (var request in requests)
         {
-            if (request.Namespace is not null)
-            {
-                ns = request.Namespace;
-            }
-
+            var ns = request.Namespace ?? DefaultNamespace;
             if (request.WholeAssembly)
             {
-                CollectTypes(request.Type.ContainingAssembly.GlobalNamespace, types, ct);
+                var collected = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+                CollectTypes(request.Type.ContainingAssembly.GlobalNamespace, collected, ct);
+                foreach (var type in collected.OrderBy(t => t.ToDisplayString(TypeFormat), StringComparer.Ordinal))
+                {
+                    AddType(namespaces, type, ns);
+                }
             }
             else
             {
-                types.Add(request.Type);
+                AddType(namespaces, request.Type, ns);
             }
         }
 
         var candidates = new List<Candidate>();
-        foreach (var type in types.OrderBy(t => t.ToDisplayString(TypeFormat), StringComparer.Ordinal))
+        foreach (var type in namespaces.Keys.OrderBy(t => t.ToDisplayString(TypeFormat), StringComparer.Ordinal))
         {
             ct.ThrowIfCancellationRequested();
             CollectCandidates(type, maui, candidates, diagnostics);
@@ -169,7 +171,7 @@ internal static class ModelBuilder
             .Select(g => (Type: (INamedTypeSymbol)g.Key!, Methods: g.ToList()))
             .OrderBy(g => g.Type.ToDisplayString(TypeFormat), StringComparer.Ordinal)
             .Select(g => new TypeModel(
-                ns,
+                namespaces[g.Type],
                 UniqueClassName(g.Type, classNames),
                 g.Type.ToDisplayString(TypeFormat),
                 new EquatableArray<MethodModel>(g.Methods
@@ -184,6 +186,14 @@ internal static class ModelBuilder
             .ToArray();
 
         return new MarkupModel(new EquatableArray<TypeModel>(typeModels), new EquatableArray<DiagnosticModel>(diagnostics.ToArray()));
+    }
+
+    private static void AddType(Dictionary<INamedTypeSymbol, string> namespaces, INamedTypeSymbol type, string ns)
+    {
+        if (!namespaces.ContainsKey(type))
+        {
+            namespaces.Add(type, ns);
+        }
     }
 
     private static void CollectTypes(INamespaceSymbol ns, HashSet<INamedTypeSymbol> types, CancellationToken ct)
