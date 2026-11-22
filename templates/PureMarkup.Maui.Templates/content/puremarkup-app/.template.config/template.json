@@ -121,7 +121,7 @@
       "datatype": "string",
       "description": "Version of the PureMarkup.Maui package to reference.",
       "replaces": "PUREMARKUP_VERSION",
-      "defaultValue": "0.1.0-dev"
+      "defaultValue": "0.1.0-preview.1"
     },
     "mvvmToolkitVersion": {
       "type": "parameter",

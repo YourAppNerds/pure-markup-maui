@@ -21,13 +21,13 @@ dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
 
 You get two files in `artifacts/packages/`:
 
-- `PureMarkup.Maui.0.1.0-dev.nupkg`: the library and its source generator.
-- `PureMarkup.Maui.Templates.0.1.0-dev.nupkg`: the `dotnet new` templates.
+- `PureMarkup.Maui.0.1.0-preview.1.nupkg`: the library and its source generator.
+- `PureMarkup.Maui.Templates.0.1.0-preview.1.nupkg`: the `dotnet new` templates.
 
 ## 2. Install the templates
 
 ```
-dotnet new install artifacts/packages/PureMarkup.Maui.Templates.0.1.0-dev.nupkg
+dotnet new install artifacts/packages/PureMarkup.Maui.Templates.0.1.0-preview.1.nupkg
 ```
 
 This adds two templates:
@@ -57,12 +57,12 @@ That restore fails until the next step is done.
 | `--applicationId <id>` | `com.companyname.<name>` | The app's `ApplicationId`. |
 | `--sample-content`, `-sc` | off | Adds a Todo tab: an enum-named grid, two-way bindings and a C# item template. |
 | `--no-windows` | off | Drops the Windows target framework and `Platforms/Windows`. |
-| `--puremarkup-version <v>` | `0.1.0-dev` | The PureMarkup.Maui package version the app references. |
+| `--puremarkup-version <v>` | `0.1.0-preview.1` | The PureMarkup.Maui package version the app references. |
 | `--no-restore` | off | Skips the restore after creation. |
 
 ## 4. Point NuGet at the local package
 
-The app references `PureMarkup.Maui` 0.1.0-dev.
+The app references `PureMarkup.Maui` 0.1.0-preview.1.
 NuGet can only find it in your `artifacts/packages` folder.
 Add a `nuget.config` next to `MyApp.csproj`.
 Use the full path to your clone:
@@ -77,9 +77,9 @@ Use the full path to your clone:
 </configuration>
 ```
 
-The version stays `0.1.0-dev` when you repack.
+The version stays `0.1.0-preview.1` when you repack.
 NuGet then keeps using its cached copy.
-After a repack, delete the `puremarkup.maui/0.1.0-dev` folder from your global packages folder.
+After a repack, delete the `puremarkup.maui/0.1.0-preview.1` folder from your global packages folder.
 `dotnet nuget locals global-packages --list` shows where that folder is.
 
 ## 5. Build and run

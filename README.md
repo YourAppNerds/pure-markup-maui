@@ -103,4 +103,4 @@ powershell -File scripts/verify-template.ps1
 dotnet run -c Release --project benchmarks/IntelliSense
 dotnet run -c Release --project benchmarks/PageConstruction -- --filter *
 ```
-The nupkg (0.1.0-dev) holds `lib/` for both TFMs and the generator in `analyzers/dotnet/cs/`.
+The nupkg (0.1.0-preview.1) holds `lib/` for both TFMs and the generator in `analyzers/dotnet/cs/`.
