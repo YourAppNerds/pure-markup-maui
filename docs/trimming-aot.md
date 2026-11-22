@@ -60,9 +60,11 @@ NativeAOT on Windows; the AOT run is evidence only.
 The sample's WinUI `App` is now `partial`, which clears CsWinRT1028 (reported once the AOT
 settings are on).
 
+## Android
+A trimmed Release build of the template app has 0 trim warnings from PureMarkup, and the app runs
+on the emulator ([android.md](android.md)).
+
 ## Still needs a Mac
 - `dotnet publish -f net10.0-ios -p:PublishAot=true` (and maccatalyst) of the template app or a
   sample: the supported NativeAOT targets, with the iOS ILC warnings and a launch on a
   device or simulator.
-- Mobile TFMs of the library itself (`-p:PureMarkupMobile=true`) also need the MAUI workloads,
-  which are missing on this Windows machine (NETSDK1147).

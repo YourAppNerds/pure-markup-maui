@@ -6,6 +6,7 @@
 - [Markup API](markup-api.md): how methods are named, bindings, layouts, generating for your own controls.
 - [Presets and theming](presets-theming.md): `Preset<T>`, app-wide defaults, the default look, theme tokens.
 - [Migrating from CommunityToolkit.Maui.Markup](migrating-from-communitytoolkit-markup.md): a mapping of common calls.
+- [Android](android.md): build matrix, emulator run and Release trimming results.
 
 ## Reference
 

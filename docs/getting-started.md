@@ -5,8 +5,9 @@ This page takes you from an empty folder to a running app with your own page.
 ## What you need
 
 - The .NET 10 SDK.
-- The .NET MAUI workload for each platform you build for.
+- The .NET MAUI workloads: `dotnet workload install maui`.
 - Windows, for the Windows target.
+- A Mac, to build an app bundle for iOS or Mac Catalyst or to run on those platforms.
 
 ## 1. Get the packages
 
@@ -39,7 +40,7 @@ cd MyApp
 ```
 
 `--no-restore` skips the restore that the template would run.
-On a machine without every mobile workload, that restore fails (see step 4).
+That restore fails on a machine that is missing a workload (see step 4).
 
 ### Options
 
@@ -54,31 +55,39 @@ On a machine without every mobile workload, that restore fails (see step 4).
 
 ## 4. Build and run
 
-The app lists the mobile target frameworks (Android, iOS, Mac Catalyst) next to Windows.
-Restore needs a workload for every one of them.
-If one is missing, restore fails with this error:
+The app targets Android, iOS, Mac Catalyst and Windows.
+With the MAUI workloads installed, a plain build compiles every target:
+
+```
+dotnet build
+```
+
+To start the app, pick one target framework:
+
+```
+dotnet build -t:Run -f net10.0-windows10.0.19041.0
+dotnet build -t:Run -f net10.0-android
+```
+
+The Android line installs and starts the app on the running emulator or attached device.
+[Android](android.md) lists what was tested there.
+On Windows, the iOS and Mac Catalyst targets compile, but making and running the app bundle needs a Mac.
+
+### Without every workload
+
+If a workload is missing, restore fails with this error:
 
 ```
 error NETSDK1147: To build this project, the following workloads must be installed: ...
 ```
 
-This is a known gap.
-You have two ways around it.
-
-**Install the workloads.**
 Run `dotnet workload restore` in the app folder.
-After that, a normal `dotnet build` works.
-
-**Build only for Windows.**
-Override the target frameworks on the command line:
+Or build only the target you have, by overriding the target frameworks:
 
 ```
-dotnet build -f net10.0-windows10.0.19041.0 -p:TargetFrameworks=net10.0-windows10.0.19041.0
 dotnet build -t:Run -f net10.0-windows10.0.19041.0 -p:TargetFrameworks=net10.0-windows10.0.19041.0
 ```
 
-The first line builds.
-The second line builds and starts the app.
 With `--framework net11.0`, use `net11.0-windows10.0.19041.0` instead.
 
 ## What is in the app

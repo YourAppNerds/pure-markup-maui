@@ -57,16 +57,18 @@ Precedence rules, triggers, tokens, the net10 theme workaround and Hot Reload:
 `PureMarkup.Maui.Templates` (`templates/PureMarkup.Maui.Templates/`) holds two `dotnet new`
 templates with no XAML files on any platform: `puremarkup-app` and `puremarkup-page`. Install with
 `dotnet new install PureMarkup.Maui.Templates@0.1.0-preview.2`; [docs/getting-started.md](docs/getting-started.md)
-lists the options, covers the NETSDK1147 restore error on machines without the mobile workloads,
-and shows how to use a local build. Template sources are under `content/`; `Microsoft.TemplateEngine.Authoring.Tasks`
+lists the options, covers the NETSDK1147 restore error on machines without every MAUI workload,
+and shows how to use a local build. Android (emulator, Debug and trimmed Release):
+[docs/android.md](docs/android.md). Template sources are under `content/`; `Microsoft.TemplateEngine.Authoring.Tasks`
 validates them on pack. The template references PureMarkup.Maui at the library's `<Version>` (a
 check in the verify script).
 
 `scripts/verify-template.ps1` (Windows PowerShell) packs both packages, installs the templates into
 a private hive, instantiates default, `--sample-content`, `--no-windows` and `--framework net11.0`
 into a temp folder with `artifacts/packages` as a feed, checks for zero `.xaml`, builds the Windows
-TFM, runs the default and sample apps through UI Automation, adds a page with `puremarkup-page` and
-rebuilds. Mobile TFMs report SKIP when restore fails with NETSDK1147 (workload missing).
+TFM, runs the default and sample apps through UI Automation, builds `net10.0-android` of the
+no-windows and sample apps, adds a page with `puremarkup-page` and rebuilds. The Android builds
+report SKIP when restore fails with NETSDK1147 (workload missing).
 
 ## Layout
 - `src/PureMarkup.Maui.Generators/`: the incremental generator (netstandard2.0). The walk over
@@ -74,12 +76,13 @@ rebuilds. Mobile TFMs report SKIP when restore fails with NETSDK1147 (workload m
   edits do not re-run it.
 - `src/PureMarkup.Maui/`: MAUI class library; `GenerateMarkup.cs` runs the generator over all of
   Microsoft.Maui.Controls at build time. TFMs: net10.0, net10.0-windows10.0.19041.0
-  (mobile TFMs with `-p:PureMarkupMobile=true`).
+  (mobile TFMs with `-p:PureMarkupMobile=true`; the package ships `lib/net10.0`, which Android
+  apps use).
 - `tests/PureMarkup.Maui.Generators.Tests/`: xUnit + Verify: generator snapshots, real-MAUI run,
   snippet compile, incremental caching, and `PublicApi.verified.txt` (public API baseline; an
   API change fails the test until the snapshot is accepted).
-- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files, styled by `UseDefaultLook()`
-  plus `AppPresets.cs`;
+- `samples/ScreenshotPage/`: Windows MAUI app with no XAML files (Android with
+  `-p:PureMarkupMobile=true`), styled by `UseDefaultLook()` plus `AppPresets.cs`;
   `verify-ui.ps1` drives it (input, theme toggle, light and dark screenshots).
 - `benchmarks/IntelliSense/`: console tool measuring completion latency and per-keystroke
   generator work in a consumer project; results in `docs/intellisense-speed.md`. Not packed.

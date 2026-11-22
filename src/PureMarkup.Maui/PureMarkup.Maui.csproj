@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <!-- Plain net10.0 lets the test project reference the library without a platform TFM.
-         Mobile TFMs are opt-in (-p:PureMarkupMobile=true): on this machine their restore fails with
-         NETSDK1147 (wasm-tools workload missing). -->
+         Mobile TFMs are opt-in (-p:PureMarkupMobile=true): without the android/ios/maccatalyst
+         workloads their restore fails with NETSDK1147, and the release workflow installs only
+         maui-windows. Android apps use lib/net10.0 (docs/android.md). -->
     <TargetFrameworks>net10.0;net10.0-windows10.0.19041.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(PureMarkupMobile)' == 'true'">$(TargetFrameworks);net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <UseMaui>true</UseMaui>
