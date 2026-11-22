@@ -21,7 +21,7 @@ To use a build of this repo instead, see [Use a local build](#use-a-local-build)
 ## 2. Install the templates
 
 ```
-dotnet new install PureMarkup.Maui.Templates@0.1.0-preview.1
+dotnet new install PureMarkup.Maui.Templates@0.1.0-preview.2
 ```
 
 This adds two templates:
@@ -49,7 +49,7 @@ On a machine without every mobile workload, that restore fails (see step 4).
 | `--applicationId <id>` | `com.companyname.<name>` | The app's `ApplicationId`. |
 | `--sample-content`, `-sc` | off | Adds a Todo tab: an enum-named grid, two-way bindings and a C# item template. |
 | `--no-windows` | off | Drops the Windows target framework and `Platforms/Windows`. |
-| `--puremarkup-version <v>` | `0.1.0-preview.1` | The PureMarkup.Maui package version the app references. |
+| `--puremarkup-version <v>` | `0.1.0-preview.2` | The PureMarkup.Maui package version the app references. |
 | `--no-restore` | off | Skips the restore after creation. |
 
 ## 4. Build and run
@@ -198,10 +198,10 @@ dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
 Install the templates from the file:
 
 ```
-dotnet new install artifacts/packages/PureMarkup.Maui.Templates.0.1.0-preview.1.nupkg
+dotnet new install artifacts/packages/PureMarkup.Maui.Templates.0.1.0-preview.2.nupkg
 ```
 
-The app references `PureMarkup.Maui` 0.1.0-preview.1.
+The app references `PureMarkup.Maui` 0.1.0-preview.2.
 Add your `artifacts/packages` folder as a package source.
 Add a `nuget.config` next to `MyApp.csproj`.
 Use the full path to your clone:
@@ -217,6 +217,6 @@ Use the full path to your clone:
 
 Your build has the same version as the NuGet package.
 NuGet keeps using whichever copy it cached first.
-After each repack, delete the `puremarkup.maui/0.1.0-preview.1` folder from your global packages folder.
+After each repack, delete the `puremarkup.maui/0.1.0-preview.2` folder from your global packages folder.
 `dotnet nuget locals global-packages --list` shows where that folder is.
 

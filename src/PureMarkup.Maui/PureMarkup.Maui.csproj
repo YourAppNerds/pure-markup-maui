@@ -25,7 +25,7 @@
 
   <PropertyGroup>
     <PackageId>PureMarkup.Maui</PackageId>
-    <Version>0.1.0-preview.1</Version>
+    <Version>0.1.0-preview.2</Version>
     <Description>C# markup for .NET MAUI without XAML: fluent, trimmable extension methods for every Microsoft.Maui.Controls type, plus a source generator for your own controls.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

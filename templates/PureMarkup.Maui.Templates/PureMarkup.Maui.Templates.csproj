@@ -6,7 +6,7 @@
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageId>PureMarkup.Maui.Templates</PackageId>
-    <Version>0.1.0-preview.1</Version>
+    <Version>0.1.0-preview.2</Version>
     <Title>PureMarkup.Maui templates</Title>
     <Description>dotnet new templates for .NET MAUI apps written in C# markup with PureMarkup.Maui, with no XAML files on any platform: puremarkup-app and puremarkup-page.</Description>
     <PackageTags>dotnet-new;templates;maui;markup;csharp;xaml-free;source-generator</PackageTags>
