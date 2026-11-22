@@ -211,7 +211,7 @@ internal static class PresetCache
 /// Style. <see cref="ClearCache"/> drops it; <see cref="UpdateApplication"/> then recompiles every
 /// preset still in use and swaps the new Style in: implicit defaults by replacing the resource
 /// (MAUI re-resolves implicit styles live), <c>.Use</c> elements by reassigning
-/// <see cref="VisualElement.Style"/>. Tracking is weak and only on when the runtime supports
+/// <c>VisualElement.Style</c>. Tracking is weak and only on when the runtime supports
 /// metadata updates (a debug session or <c>dotnet watch</c>), so release apps pay nothing.
 /// </summary>
 internal static class PresetHotReload
