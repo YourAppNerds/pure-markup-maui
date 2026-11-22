@@ -1,0 +1,81 @@
+# Publishes PureMarkup.Maui and PureMarkup.Maui.Templates to nuget.org.
+# Trigger: push a tag v<Version>, for example v0.1.0-preview.2. The tag must match <Version> in
+# src/PureMarkup.Maui/PureMarkup.Maui.csproj. Run it by hand (workflow_dispatch) to build, test and
+# pack without publishing.
+# Auth: NuGet Trusted Publishing (policy "pure-markup-maui-release" on nuget.org, workflow release.yml).
+# No API key is stored. Set the repository variable NUGET_USER to the nuget.org profile name that owns
+# the policy.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write   # needed for Trusted Publishing
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      # The library targets net10.0-windows10.0.19041.0 with UseMaui; mobile TFMs stay opt-in.
+      - name: Install MAUI workload
+        run: dotnet workload install maui-windows
+
+      - name: Check versions
+        id: version
+        run: |
+          lib=$(dotnet msbuild src/PureMarkup.Maui/PureMarkup.Maui.csproj -getProperty:Version)
+          tpl=$(dotnet msbuild templates/PureMarkup.Maui.Templates/PureMarkup.Maui.Templates.csproj -getProperty:Version)
+          def=$(grep -A6 '"pureMarkupVersion"' templates/PureMarkup.Maui.Templates/content/*/.template.config/template.json \
+                | grep -oE '"defaultValue": *"[^"]+"' | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
+          echo "library $lib, templates $tpl, template default $def"
+          if [ "$lib" != "$tpl" ] || [ "$lib" != "$def" ]; then
+            echo "::error::Versions differ: library $lib, templates $tpl, template default $def"; exit 1
+          fi
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v$lib" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match version v$lib"; exit 1
+          fi
+          echo "version=$lib" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        run: dotnet test PureMarkup.Maui.slnx -c Release
+
+      - name: Pack
+        run: |
+          dotnet pack src/PureMarkup.Maui -c Release -o artifacts/packages
+          dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ steps.version.outputs.version }}
+          path: artifacts/packages/
+
+      - name: NuGet login (Trusted Publishing)
+        if: github.ref_type == 'tag'
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      # Pushing a .nupkg also pushes the .snupkg next to it.
+      - name: Push to nuget.org
+        if: github.ref_type == 'tag'
+        run: |
+          for f in artifacts/packages/*.nupkg; do
+            dotnet nuget push "$f" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
