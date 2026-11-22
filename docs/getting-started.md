@@ -10,24 +10,18 @@ This page takes you from an empty folder to a running app with your own page.
 
 ## 1. Get the packages
 
-PureMarkup.Maui is not on NuGet yet.
-For now you build both packages from this repo.
-Run this in the repo root:
+PureMarkup.Maui is on NuGet as a preview:
 
-```
-dotnet pack src/PureMarkup.Maui -c Release -o artifacts/packages
-dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
-```
+- `PureMarkup.Maui`: the library and its source generator.
+- `PureMarkup.Maui.Templates`: the `dotnet new` templates.
 
-You get two files in `artifacts/packages/`:
-
-- `PureMarkup.Maui.0.1.0-preview.1.nupkg`: the library and its source generator.
-- `PureMarkup.Maui.Templates.0.1.0-preview.1.nupkg`: the `dotnet new` templates.
+You need nothing else for this step.
+To use a build of this repo instead, see [Use a local build](#use-a-local-build).
 
 ## 2. Install the templates
 
 ```
-dotnet new install artifacts/packages/PureMarkup.Maui.Templates.0.1.0-preview.1.nupkg
+dotnet new install PureMarkup.Maui.Templates::0.1.0-preview.1
 ```
 
 This adds two templates:
@@ -37,8 +31,6 @@ This adds two templates:
 | `puremarkup-app` | A .NET MAUI app with no XAML files, including the Windows host. |
 | `puremarkup-page` | One `ContentPage` written in C# markup. |
 
-When the packages are on NuGet, this step becomes `dotnet new install PureMarkup.Maui.Templates`.
-
 ## 3. Create the app
 
 ```
@@ -47,7 +39,7 @@ cd MyApp
 ```
 
 `--no-restore` skips the restore that the template would run.
-That restore fails until the next step is done.
+On a machine without every mobile workload, that restore fails (see step 4).
 
 ### Options
 
@@ -60,29 +52,7 @@ That restore fails until the next step is done.
 | `--puremarkup-version <v>` | `0.1.0-preview.1` | The PureMarkup.Maui package version the app references. |
 | `--no-restore` | off | Skips the restore after creation. |
 
-## 4. Point NuGet at the local package
-
-The app references `PureMarkup.Maui` 0.1.0-preview.1.
-NuGet can only find it in your `artifacts/packages` folder.
-Add a `nuget.config` next to `MyApp.csproj`.
-Use the full path to your clone:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <add key="nuget" value="https://api.nuget.org/v3/index.json" />
-    <add key="puremarkup-local" value="C:\path\to\pure-markup-maui\artifacts\packages" />
-  </packageSources>
-</configuration>
-```
-
-The version stays `0.1.0-preview.1` when you repack.
-NuGet then keeps using its cached copy.
-After a repack, delete the `puremarkup.maui/0.1.0-preview.1` folder from your global packages folder.
-`dotnet nuget locals global-packages --list` shows where that folder is.
-
-## 5. Build and run
+## 4. Build and run
 
 The app lists the mobile target frameworks (Android, iOS, Mac Catalyst) next to Windows.
 Restore needs a workload for every one of them.
@@ -215,3 +185,38 @@ So the constructor gets its view model.
 - [Markup API](markup-api.md): how methods are named, bindings, layouts.
 - [Presets and theming](presets-theming.md): shared looks, tokens, dark mode.
 - [Diagnostics](diagnostics.md): what each `PMxxxx` message means.
+
+## Use a local build
+
+To try changes from this repo, build both packages in the repo root:
+
+```
+dotnet pack src/PureMarkup.Maui -c Release -o artifacts/packages
+dotnet pack templates/PureMarkup.Maui.Templates -c Release -o artifacts/packages
+```
+
+Install the templates from the file:
+
+```
+dotnet new install artifacts/packages/PureMarkup.Maui.Templates.0.1.0-preview.1.nupkg
+```
+
+The app references `PureMarkup.Maui` 0.1.0-preview.1.
+Add your `artifacts/packages` folder as a package source.
+Add a `nuget.config` next to `MyApp.csproj`.
+Use the full path to your clone:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="puremarkup-local" value="C:\path\to\pure-markup-maui\artifacts\packages" />
+  </packageSources>
+</configuration>
+```
+
+Your build has the same version as the NuGet package.
+NuGet keeps using whichever copy it cached first.
+After each repack, delete the `puremarkup.maui/0.1.0-preview.1` folder from your global packages folder.
+`dotnet nuget locals global-packages --list` shows where that folder is.
+

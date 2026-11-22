@@ -55,10 +55,10 @@ Precedence rules, triggers, tokens, the net10 theme workaround and Hot Reload:
 
 ## Templates
 `PureMarkup.Maui.Templates` (`templates/PureMarkup.Maui.Templates/`) holds two `dotnet new`
-templates with no XAML files on any platform: `puremarkup-app` and `puremarkup-page`. The packages
-are not on NuGet yet; [docs/getting-started.md](docs/getting-started.md) installs them from
-`artifacts/packages`, lists the options, and covers the NETSDK1147 restore error on machines without
-the mobile workloads. Template sources are under `content/`; `Microsoft.TemplateEngine.Authoring.Tasks`
+templates with no XAML files on any platform: `puremarkup-app` and `puremarkup-page`. Install with
+`dotnet new install PureMarkup.Maui.Templates::0.1.0-preview.1`; [docs/getting-started.md](docs/getting-started.md)
+lists the options, covers the NETSDK1147 restore error on machines without the mobile workloads,
+and shows how to use a local build. Template sources are under `content/`; `Microsoft.TemplateEngine.Authoring.Tasks`
 validates them on pack. The template references PureMarkup.Maui at the library's `<Version>` (a
 check in the verify script).
 
