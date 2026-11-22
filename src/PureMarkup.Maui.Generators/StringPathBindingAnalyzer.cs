@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -28,20 +30,106 @@ public sealed class StringPathBindingAnalyzer : DiagnosticAnalyzer
         {
             var binding = start.Compilation.GetTypeByMetadataName("Microsoft.Maui.Controls.Binding");
             if (binding is null) return;
-            start.RegisterOperationAction(c => Analyze(c, binding), OperationKind.Argument);
+            var multiBinding = start.Compilation.GetTypeByMetadataName("Microsoft.Maui.Controls.MultiBinding");
+            start.RegisterOperationAction(c => Analyze(c, new Types(binding, multiBinding)), OperationKind.Argument);
         });
     }
 
-    private static void Analyze(OperationAnalysisContext context, INamedTypeSymbol binding)
+    private static void Analyze(OperationAnalysisContext context, Types types)
     {
         var argument = (IArgumentOperation)context.Operation;
         if (argument.Parameter?.ContainingSymbol is not IMethodSymbol method || !IsMarkupMethod(method)) return;
 
         var value = argument.Value;
         while (value is IConversionOperation { IsImplicit: true } conversion) value = conversion.Operand;
-        if (!DerivesFrom(value.Type, binding)) return;
+        if (!new Search(types, Root(argument)).IsStringPath(value)) return;
 
         context.ReportDiagnostic(Diagnostic.Create(Diagnostics.StringPathBinding, value.Syntax.GetLocation(), method.Name));
+    }
+
+    private static IOperation Root(IOperation operation)
+    {
+        while (operation.Parent is not null) operation = operation.Parent;
+        return operation;
+    }
+
+    private sealed record Types(INamedTypeSymbol Binding, INamedTypeSymbol? MultiBinding);
+
+    /// <summary>
+    /// Whether a value can be a string-path Binding: the value itself, a MultiBinding with such a child,
+    /// or a local variable that is assigned one anywhere in the same method body (not flow-sensitive).
+    /// Fields, properties, parameters and method results are not followed.
+    /// </summary>
+    private sealed class Search(Types types, IOperation root)
+    {
+        private readonly HashSet<ILocalSymbol> _visited = new(SymbolEqualityComparer.Default);
+
+        public bool IsStringPath(IOperation? value)
+        {
+            while (value is IConversionOperation conversion) value = conversion.Operand;
+            switch (value)
+            {
+                case null:
+                    return false;
+                case IConditionalOperation conditional:
+                    return IsStringPath(conditional.WhenTrue) || IsStringPath(conditional.WhenFalse);
+                case ICoalesceOperation coalesce:
+                    return IsStringPath(coalesce.Value) || IsStringPath(coalesce.WhenNull);
+            }
+
+            if (DerivesFrom(value.Type, types.Binding)) return true;
+            if (value is IObjectCreationOperation creation && IsMultiBinding(creation.Type))
+            {
+                return creation.Initializer is not null && HasStringPathChild(creation.Initializer);
+            }
+
+            return value is ILocalReferenceOperation local && LocalIsStringPath(local.Local);
+        }
+
+        private bool IsMultiBinding(ITypeSymbol? type) => types.MultiBinding is not null && DerivesFrom(type, types.MultiBinding);
+
+        // Bindings = { ... }, Bindings = new List<BindingBase> { ... }, Bindings = [ ... ], new BindingBase[] { ... }.
+        private bool HasStringPathChild(IOperation initializer)
+        {
+            foreach (var operation in initializer.Descendants())
+            {
+                var found = operation switch
+                {
+                    IArgumentOperation argument => IsStringPath(argument.Value),
+                    ICollectionExpressionOperation collection => collection.Elements.Any(IsStringPath),
+                    IArrayInitializerOperation array => array.ElementValues.Any(IsStringPath),
+                    _ => false,
+                };
+                if (found) return true;
+            }
+
+            return false;
+        }
+
+        private bool LocalIsStringPath(ILocalSymbol local)
+        {
+            if (!_visited.Add(local)) return false;
+            var isMulti = IsMultiBinding(local.Type);
+            foreach (var operation in root.Descendants())
+            {
+                var found = operation switch
+                {
+                    IVariableDeclaratorOperation declarator when SymbolEqualityComparer.Default.Equals(declarator.Symbol, local)
+                        => IsStringPath(declarator.GetVariableInitializer()?.Value),
+                    ISimpleAssignmentOperation { Target: ILocalReferenceOperation target } assignment
+                        when SymbolEqualityComparer.Default.Equals(target.Local, local)
+                        => IsStringPath(assignment.Value),
+                    // multi.Bindings.Add(new Binding("..."))
+                    IInvocationOperation { TargetMethod.Name: "Add", Instance: IPropertyReferenceOperation { Property.Name: "Bindings", Instance: ILocalReferenceOperation owner } } add
+                        when isMulti && SymbolEqualityComparer.Default.Equals(owner.Local, local)
+                        => add.Arguments.Any(a => IsStringPath(a.Value)),
+                    _ => false,
+                };
+                if (found) return true;
+            }
+
+            return false;
+        }
     }
 
     // Library methods (generated and sugar) plus methods a consumer generates with [GenerateMarkup].

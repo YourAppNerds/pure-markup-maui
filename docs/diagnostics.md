@@ -128,4 +128,24 @@ new Label().Text(Binding.Create(static (ProfileViewModel m) => m.Name));
 `Binding.Create` with a lambda is turned into a compiled binding by MAUI's source generator.
 It needs no reflection.
 
-PM0007 does not check bindings set with `SetBinding(...)`, or inner bindings of a `MultiBinding`.
+PM0007 also follows a binding through local variables in the same method, and looks inside a `MultiBinding`:
+
+```csharp
+BindingBase b = new Binding("Name");
+new Label().Text(b);                                      // PM0007
+
+new Label().Text(new MultiBinding
+{
+    Bindings = { new Binding("First"), new Binding("Last") }, // PM0007 (once, on the MultiBinding)
+    StringFormat = "{0} {1}",
+});
+
+var m = new MultiBinding();
+m.Bindings.Add(new Binding("Name"));
+new Label().Text(m);                                      // PM0007
+```
+
+For a local variable, any assignment in the method counts, wherever it is (the check does not track the order of statements).
+
+Limits: PM0007 does not follow fields, properties, method parameters or return values.
+It does not check bindings set with `SetBinding(...)`.
