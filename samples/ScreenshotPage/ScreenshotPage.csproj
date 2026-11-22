@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Windows MAUI app with no XAML at all. Host approach from spikes/windows-no-appxaml. -->
+  <!-- MAUI app with no XAML at all. Host approach from spikes/windows-no-appxaml.
+       Android is opt-in like the library's mobile TFMs (-p:PureMarkupMobile=true, docs/android.md). -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFrameworks>net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(PureMarkupMobile)' == 'true'">$(TargetFrameworks);net10.0-android</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>ScreenshotPage</RootNamespace>
     <UseMaui>true</UseMaui>
@@ -18,8 +20,9 @@
     <!-- No App.xaml means no XAML Page/ApplicationDefinition items, so the Windows App SDK skips
          resources.pri; WinUI then cannot find its theme resources. Force it on. -->
     <AppxGeneratePriEnabled>true</AppxGeneratePriEnabled>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <!-- Trim/AOT check (docs/trimming-aot.md): -p:PureMarkupTrimCheck=true turns on trimmed publish
