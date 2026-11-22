@@ -7,8 +7,8 @@
 #     variant has a .xaml file.
 #  3. Builds the Windows TFM of the default and sample apps, launches each and clicks the counter
 #     button through UI Automation (works on a locked workstation); in the sample app it also opens
-#     the Todo tab and adds an item. Mobile TFMs are built only if the
-#     workloads are there: NETSDK1147 (missing workload) is reported as SKIP, not as a failure.
+#     the Todo tab and adds an item. Builds net10.0-android of the no-windows and sample apps
+#     (build only, docs/android.md); NETSDK1147 (missing workload) is reported as SKIP, not as a failure.
 #  4. Adds a page with puremarkup-page to the default app and builds it again.
 # Run with Windows PowerShell (UI Automation): powershell -File scripts/verify-template.ps1
 param(
@@ -122,6 +122,7 @@ $defaultBuilt = $false; $sampleBuilt = $false
 if ($default) { $defaultBuilt = BuildTfm $default $winTfm }
 if ($sample) { $sampleBuilt = BuildTfm $sample $winTfm }
 if ($noWin) { [void](BuildTfm $noWin 'net10.0-android') }
+if ($sample) { [void](BuildTfm $sample 'net10.0-android') }
 
 # Sample content: opens the Todo tab, adds an item through the Entry and Add button.
 function RunTodo($win) {
