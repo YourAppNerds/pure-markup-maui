@@ -148,6 +148,33 @@ public class FakeMauiSnapshotTests
     private const string WholeAssemblyAttribute =
         "[assembly: PureMarkup.Maui.GenerateMarkup(typeof(Microsoft.Maui.Controls.View), WholeAssembly = true)]";
 
+    private const string UserControls = """
+
+        namespace MyApp
+        {
+            using System;
+            using Microsoft.Maui.Controls;
+
+            public class BaseControl : View
+            {
+                public static readonly BindableProperty ValueProperty = new();
+                public int Value { get; set; }
+                public event EventHandler? Changed;
+            }
+
+            public class MidControl : BaseControl
+            {
+                public string? Caption { get; set; }
+            }
+
+            public class RatingView : MidControl
+            {
+                public static readonly BindableProperty StarsProperty = new();
+                public int Stars { get; set; }
+            }
+        }
+        """;
+
     private static string WithAttributes(params string[] attributes) =>
         FakeMaui.Replace(WholeAssemblyAttribute, string.Join("\n", attributes));
 
@@ -179,5 +206,109 @@ public class FakeMauiSnapshotTests
         Assert.Contains("namespace A.Markup;", files["ButtonMarkup.g.cs"]);
         Assert.Contains("namespace B.Markup;", files["GridMarkup.g.cs"]);
         Assert.Contains("namespace PureMarkup.Maui;", files["LabelMarkup.g.cs"]);
+    }
+
+    [Fact]
+    public void SingleTypeIncludesUserBaseClasses()
+    {
+        var source = WithAttributes(
+            """[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyApp.RatingView), Namespace = "MyApp.Markup")]""")
+            + UserControls
+            + """
+
+            namespace UseIt
+            {
+                using MyApp.Markup;
+                static class U { static MyApp.RatingView M() => new MyApp.RatingView().Stars(3).Caption("c").Value(2).OnChanged(() => { }); }
+            }
+            """;
+        var (driver, output, diagnostics) = TestCompilation.Run(TestCompilation.Create(source, TestCompilation.Runtime));
+
+        AssertNoErrors(output);
+        Assert.Empty(diagnostics);
+        Assert.Equal(
+            ["BaseControlMarkup.g.cs", "GenerateMarkupAttribute.g.cs", "MidControlMarkup.g.cs", "RatingViewMarkup.g.cs"],
+            FileNames(driver));
+        var files = GeneratedFiles(driver);
+        Assert.Contains("namespace MyApp.Markup;", files["BaseControlMarkup.g.cs"]);
+        Assert.Contains("where T : global::MyApp.BaseControl", files["BaseControlMarkup.g.cs"]);
+    }
+
+    [Fact]
+    public void BaseClassWithItsOwnAttributeIsGeneratedOnce()
+    {
+        var source = WithAttributes(
+            """[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyApp.RatingView))]""",
+            """[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyApp.BaseControl), Namespace = "Other")]""")
+            + UserControls
+            + """
+
+            namespace UseIt
+            {
+                using PureMarkup.Maui;
+                using Other;
+                static class U { static MyApp.RatingView M() => new MyApp.RatingView().Stars(3).Caption("c").Value(2); }
+            }
+            """;
+        var (driver, output, _) = TestCompilation.Run(TestCompilation.Create(source, TestCompilation.Runtime));
+
+        AssertNoErrors(output);
+        Assert.Equal(
+            ["BaseControlMarkup.g.cs", "GenerateMarkupAttribute.g.cs", "MidControlMarkup.g.cs", "RatingViewMarkup.g.cs"],
+            FileNames(driver));
+        var files = GeneratedFiles(driver);
+        Assert.Contains("namespace Other;", files["BaseControlMarkup.g.cs"]);
+        Assert.Contains("namespace PureMarkup.Maui;", files["MidControlMarkup.g.cs"]);
+    }
+
+    [Fact]
+    public void BaseClassGeneratedInReferencedAssemblyIsNotRegenerated()
+    {
+        var librarySource = WithAttributes("[assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyLib.BaseControl))]") + """
+
+            namespace MyLib
+            {
+                using Microsoft.Maui.Controls;
+
+                public class BaseControl : View
+                {
+                    public static readonly BindableProperty ValueProperty = new();
+                    public int Value { get; set; }
+                }
+
+                public class Plain : BaseControl
+                {
+                    public string? Caption { get; set; }
+                }
+            }
+            """;
+        var (_, library, _) = TestCompilation.Run(TestCompilation.Create(librarySource, TestCompilation.Runtime));
+        AssertNoErrors(library);
+        using var image = new MemoryStream();
+        Assert.True(library.Emit(image).Success);
+        var libraryReference = MetadataReference.CreateFromImage(image.ToArray());
+
+        const string appSource = """
+            [assembly: PureMarkup.Maui.GenerateMarkup(typeof(MyApp.RatingView))]
+
+            namespace MyApp
+            {
+                using Microsoft.Maui.Controls;
+                using PureMarkup.Maui;
+
+                public class RatingView : MyLib.Plain
+                {
+                    public static readonly BindableProperty StarsProperty = new();
+                    public int Stars { get; set; }
+                }
+
+                static class U { static RatingView M() => new RatingView().Stars(3).Caption("c").Value(2); }
+            }
+            """;
+        var app = TestCompilation.Create(appSource, TestCompilation.Runtime.Append(libraryReference));
+        var (driver, output, _) = TestCompilation.Run(app);
+
+        AssertNoErrors(output);
+        Assert.Equal(["GenerateMarkupAttribute.g.cs", "PlainMarkup.g.cs", "RatingViewMarkup.g.cs"], FileNames(driver));
     }
 }

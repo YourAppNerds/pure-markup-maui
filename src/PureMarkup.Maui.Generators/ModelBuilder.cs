@@ -15,6 +15,7 @@ internal static class ModelBuilder
     private const string BindingBaseType = "global::Microsoft.Maui.Controls.BindingBase";
     private const string PresetContextName = "PureMarkup.Maui.PresetContext`1";
     private const string TokenName = "PureMarkup.Maui.Token`1";
+    private const string GeneratorName = "PureMarkup.Maui.Generators";
 
     // Whole-assembly mode skips these namespace segments: framework plumbing and the
     // On<Platform>() platform-specifics API, whose attached properties collide by name.
@@ -77,7 +78,7 @@ internal static class ModelBuilder
         var local = requests
             .Where(r => !IsWholeAssemblyFromMetadata(r, compilation) && !covered.Contains(r.Type.ContainingAssembly))
             .ToList();
-        return Build(compilation, local, ct);
+        return Build(compilation, local, ct, covered);
     }
 
     /// <summary>The runtime preset types ship in PureMarkup.Maui; without them only control overloads are emitted.</summary>
@@ -118,7 +119,7 @@ internal static class ModelBuilder
         return requests;
     }
 
-    private static MarkupModel Build(Compilation compilation, List<Request> requests, CancellationToken ct)
+    private static MarkupModel Build(Compilation compilation, List<Request> requests, CancellationToken ct, HashSet<IAssemblySymbol>? coveredAssemblies = null)
     {
         if (requests.Count == 0)
         {
@@ -152,6 +153,47 @@ internal static class ModelBuilder
             {
                 AddType(namespaces, request.Type, ns);
             }
+        }
+
+        // A single type also gets the members it inherits from the user's own base classes, up to
+        // the first base that already has methods: a MAUI type (compiled into PureMarkup.Maui),
+        // a type another attribute names, or a type a referenced assembly generated markup for.
+        var generatedInReferences = new Dictionary<IAssemblySymbol, HashSet<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
+        foreach (var request in requests.Where(r => !r.WholeAssembly))
+        {
+            for (var b = request.Type.BaseType; b is not null && !HasMarkupElsewhere(b); b = b.BaseType)
+            {
+                ct.ThrowIfCancellationRequested();
+                AddType(namespaces, b.OriginalDefinition, request.Namespace ?? DefaultNamespace);
+            }
+        }
+
+        bool HasMarkupElsewhere(INamedTypeSymbol type)
+        {
+            if (!DerivesFrom(type, maui.BindableObject) || IsMauiType(type) || namespaces.ContainsKey(type.OriginalDefinition))
+            {
+                return true;
+            }
+
+            var assembly = type.ContainingAssembly;
+            if (SymbolEqualityComparer.Default.Equals(assembly, compilation.Assembly))
+            {
+                return false;
+            }
+
+            if (coveredAssemblies is not null && coveredAssemblies.Contains(assembly))
+            {
+                return true;
+            }
+
+            if (!generatedInReferences.TryGetValue(assembly, out var generated))
+            {
+                generated = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+                CollectGeneratedReceivers(assembly.GlobalNamespace, generated, ct);
+                generatedInReferences.Add(assembly, generated);
+            }
+
+            return generated.Contains(type.OriginalDefinition);
         }
 
         var candidates = new List<Candidate>();
@@ -193,6 +235,59 @@ internal static class ModelBuilder
         if (!namespaces.ContainsKey(type))
         {
             namespaces.Add(type, ns);
+        }
+    }
+
+    /// <summary>Types of Microsoft.Maui.* (already generated into PureMarkup.Maui), by assembly or by namespace.</summary>
+    private static bool IsMauiType(INamedTypeSymbol type)
+    {
+        if (type.ContainingAssembly?.Name.StartsWith("Microsoft.Maui", StringComparison.Ordinal) == true)
+        {
+            return true;
+        }
+
+        var ns = type.ContainingNamespace?.ToDisplayString() ?? "";
+        return ns == "Microsoft.Maui" || ns.StartsWith("Microsoft.Maui.", StringComparison.Ordinal);
+    }
+
+    /// <summary>Receivers of markup methods that a referenced assembly's own generator run emitted.</summary>
+    private static void CollectGeneratedReceivers(INamespaceSymbol ns, HashSet<INamedTypeSymbol> receivers, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        foreach (var type in ns.GetTypeMembers())
+        {
+            if (!type.IsStatic || !type.GetAttributes().Any(a =>
+                    a.AttributeClass?.ToDisplayString() == "System.CodeDom.Compiler.GeneratedCodeAttribute"
+                    && a.ConstructorArguments.Length > 0 && a.ConstructorArguments[0].Value as string == GeneratorName))
+            {
+                continue;
+            }
+
+            foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
+            {
+                if (!method.IsExtensionMethod || method.Parameters.Length == 0)
+                {
+                    continue;
+                }
+
+                var receiver = method.Parameters[0].Type;
+                if (receiver is ITypeParameterSymbol parameter)
+                {
+                    foreach (var constraint in parameter.ConstraintTypes.OfType<INamedTypeSymbol>())
+                    {
+                        receivers.Add(constraint.OriginalDefinition);
+                    }
+                }
+                else if (receiver is INamedTypeSymbol named)
+                {
+                    receivers.Add(named.OriginalDefinition);
+                }
+            }
+        }
+
+        foreach (var child in ns.GetNamespaceMembers())
+        {
+            CollectGeneratedReceivers(child, receivers, ct);
         }
     }
 

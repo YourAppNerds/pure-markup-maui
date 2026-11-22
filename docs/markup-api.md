@@ -231,11 +231,16 @@ The attribute has two optional settings:
 
 Things to know:
 
-- Without `WholeAssembly`, only the members declared on the named type are generated.
-  Members it inherits from MAUI types already have methods.
-  For a base class of your own, add an attribute for it too, or use `WholeAssembly`.
+- Without `WholeAssembly`, the named type gets methods for its own members and for the members of its base classes.
+  The walk up the base classes stops at the first one that already has methods:
+  a MAUI type (those come compiled in PureMarkup.Maui), a type another `GenerateMarkup` attribute names,
+  or a type a referenced library already generated methods for.
+  So each base class gets its methods once, even when several of your controls share it.
+  A non-MAUI base class from another library is included too, unless that library already generated methods for it.
+  A base class that is not public gets no methods.
 - Each attribute's classes go to that attribute's `Namespace` (or `PureMarkup.Maui` if it has none).
-  A type reached by two attributes uses the first one's namespace.
+  Base classes found by the walk go to the namespace of the attribute that found them.
+  A type reached by two attributes uses the first one's namespace; an attribute that names the type itself wins over the walk.
 - The generator adds the attribute class to your project for you.
   It is `[Conditional]`, so it does not end up in your compiled assembly.
 - The project must reference `Microsoft.Maui.Controls`.
