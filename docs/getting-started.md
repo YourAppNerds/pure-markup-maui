@@ -21,7 +21,7 @@ To use a build of this repo instead, see [Use a local build](#use-a-local-build)
 ## 2. Install the templates
 
 ```
-dotnet new install PureMarkup.Maui.Templates::0.1.0-preview.1
+dotnet new install PureMarkup.Maui.Templates@0.1.0-preview.1
 ```
 
 This adds two templates:
